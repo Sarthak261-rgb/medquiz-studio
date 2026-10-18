@@ -156,3 +156,12 @@ def test_key_terms_in_source(question, chunk):
         update={"options": ["vagus nerve", "baroreceptor reflex arc", "c", "d"], "answer_index": 1}
     )
     assert key_terms_in_source(off, chunk).passed is False
+
+
+def test_trimmed_quotes_still_match(question, chunk):
+    from medquiz.checks.rules import evidence_in_source
+
+    trimmed = question.model_copy(
+        update={"evidence_quote": "The sinoatrial node is the normal pacemaker... It initiates the sinus rhythm."}
+    )
+    assert evidence_in_source(trimmed, chunk, 75).passed is True

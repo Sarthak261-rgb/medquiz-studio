@@ -83,13 +83,18 @@ def length_cue(q: Question, ratio: float) -> CheckResult:
     return _result("length_cue", r < ratio, round(r, 2))
 
 
+_PAREN = re.compile(r"\s*\([^)]*\)")
+_ELLIPSIS = re.compile(r"\.\.\.|…")
+
+
 def evidence_in_source(q: Question, chunk: Chunk, threshold: float) -> CheckResult:
-    """Every sentence of the evidence quote must appear (fuzzily) in the cited chunk."""
+    """Every sentence of the evidence quote must appear, near enough, in the cited chunk."""
     if not q.evidence_quote:
         return _result("evidence_in_source", None, reason="no evidence quote")
-    source = norm(chunk.text)
-    sentences = split_sentences(q.evidence_quote) or [q.evidence_quote]
-    scores = [fuzz.partial_ratio(norm(s), source) for s in sentences if len(norm(s)) >= 15]
+    # models trim quotes: "..." joins pieces and asides like "(see the figure)" get dropped
+    source = norm(_PAREN.sub("", chunk.text))
+    pieces = [p for s in split_sentences(q.evidence_quote) or [q.evidence_quote] for p in _ELLIPSIS.split(s)]
+    scores = [fuzz.partial_ratio(norm(_PAREN.sub("", p)), source) for p in pieces if len(norm(p)) >= 15]
     if not scores:
         return _result("evidence_in_source", False, 0.0, reason="quote too short")
     worst = min(scores)
