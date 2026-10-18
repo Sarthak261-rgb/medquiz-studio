@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.env
+.claude/
+CLAUDE.md
+
+# raw CNXML is re-downloadable from the pinned commit
+data/raw/
+# working database, rebuilt from runs/ and data/reviews/ with `medquiz db rebuild`
+data/*.db
+data/*.db-journal
+data/index/
+.streamlit/secrets.toml

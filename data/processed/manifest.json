@@ -1,0 +1,215 @@
+{
+  "source_repo": "openstax/osbooks-anatomy-physiology",
+  "source_commit": "5ae32b3f4bc24ed003e91dc38bf47dba80751044",
+  "license": "CC BY-NC-SA 4.0",
+  "created_at": "2026-10-18T09:33:17Z",
+  "chunking": {
+    "target_words": 220,
+    "max_words": 320,
+    "min_words": 70
+  },
+  "n_chunks": 151,
+  "n_words": 32506,
+  "n_book_questions": 57,
+  "pages": [
+    {
+      "section": "19.0",
+      "module_id": "m46679",
+      "title": "Introduction",
+      "objectives": [],
+      "n_blocks": 2,
+      "n_book_questions": 0
+    },
+    {
+      "section": "19.1",
+      "module_id": "m46676",
+      "title": "Heart Anatomy",
+      "objectives": [
+        "Describe the location and position of the heart within the body cavity",
+        "Describe the internal and external anatomy of the heart",
+        "Identify the tissue layers of the heart",
+        "Relate the structure of the heart to its function as a pump",
+        "Compare systemic circulation to pulmonary circulation",
+        "Identify the veins and arteries of the coronary circulation system",
+        "Trace the pathway of oxygenated and deoxygenated blood thorough the chambers of the heart"
+      ],
+      "n_blocks": 49,
+      "n_book_questions": 7
+    },
+    {
+      "section": "19.2",
+      "module_id": "m46664",
+      "title": "Cardiac Muscle and Electrical Activity",
+      "objectives": [
+        "Describe the structure of cardiac muscle",
+        "Identify and describe the components of the conducting system that distributes electrical impulses through the heart",
+        "Compare the effect of ion movement on membrane potential of cardiac conductive and contractile cells",
+        "Relate characteristics of an electrocardiogram to events in the cardiac cycle",
+        "Identify blocks that can interrupt the cardiac cycle"
+      ],
+      "n_blocks": 30,
+      "n_book_questions": 4
+    },
+    {
+      "section": "19.3",
+      "module_id": "m46661",
+      "title": "Cardiac Cycle",
+      "objectives": [
+        "Describe the relationship between blood pressure and blood flow",
+        "Summarize the events of the cardiac cycle",
+        "Compare atrial and ventricular systole and diastole",
+        "Relate heart sounds detected by auscultation to action of heart\u2019s valves"
+      ],
+      "n_blocks": 15,
+      "n_book_questions": 4
+    },
+    {
+      "section": "19.4",
+      "module_id": "m46672",
+      "title": "Cardiac Physiology",
+      "objectives": [
+        "Relate heart rate to cardiac output",
+        "Describe the effect of exercise on heart rate",
+        "Identify cardiovascular centers and cardiac reflexes that regulate heart function",
+        "Describe factors affecting heart rate",
+        "Distinguish between positive and negative factors that affect heart contractility",
+        "Summarize factors affecting stroke volume and cardiac output",
+        "Describe the cardiac response to variations in blood flow and pressure"
+      ],
+      "n_blocks": 43,
+      "n_book_questions": 5
+    },
+    {
+      "section": "19.5",
+      "module_id": "m46673",
+      "title": "Development of the Heart",
+      "objectives": [
+        "Describe the embryological development of heart structures",
+        "Identify five regions of the fetal heart",
+        "Relate fetal heart structures to adult counterparts"
+      ],
+      "n_blocks": 4,
+      "n_book_questions": 5
+    },
+    {
+      "section": "22.0",
+      "module_id": "m46523",
+      "title": "Introduction",
+      "objectives": [],
+      "n_blocks": 1,
+      "n_book_questions": 0
+    },
+    {
+      "section": "22.1",
+      "module_id": "m46548",
+      "title": "Organs and Structures of the Respiratory System",
+      "objectives": [
+        "List the structures that make up the respiratory system",
+        "Describe how the respiratory system processes oxygen and CO2",
+        "Compare and contrast the functions of upper respiratory tract with the lower respiratory tract"
+      ],
+      "n_blocks": 26,
+      "n_book_questions": 6
+    },
+    {
+      "section": "22.2",
+      "module_id": "m46551",
+      "title": "The Lungs",
+      "objectives": [
+        "Describe the overall function of the lung",
+        "Summarize the blood flow pattern associated with the lungs",
+        "Outline the anatomy of the blood supply to the lungs",
+        "Describe the pleura of the lungs and their function"
+      ],
+      "n_blocks": 9,
+      "n_book_questions": 4
+    },
+    {
+      "section": "22.3",
+      "module_id": "m46549",
+      "title": "The Process of Breathing",
+      "objectives": [
+        "Describe the mechanisms that drive breathing",
+        "Discuss how pressure, volume, and resistance are related",
+        "List the steps involved in pulmonary ventilation",
+        "Discuss the physical factors related to breathing",
+        "Discuss the meaning of respiratory volume and capacities",
+        "Define respiratory rate",
+        "Outline the mechanisms behind the control of breathing",
+        "Describe the respiratory centers of the medulla oblongata",
+        "Describe the respiratory centers of the pons",
+        "Discuss factors that can influence the respiratory rate"
+      ],
+      "n_blocks": 33,
+      "n_book_questions": 6
+    },
+    {
+      "section": "22.4",
+      "module_id": "m46521",
+      "title": "Gas Exchange",
+      "objectives": [
+        "Compare the composition of atmospheric air and alveolar air",
+        "Describe the mechanisms that drive gas exchange",
+        "Discuss the importance of sufficient ventilation and perfusion, and how the body adapts when they are insufficient",
+        "Discuss the process of external respiration",
+        "Describe the process of internal respiration"
+      ],
+      "n_blocks": 17,
+      "n_book_questions": 4
+    },
+    {
+      "section": "22.5",
+      "module_id": "m46545",
+      "title": "Transport of Gases",
+      "objectives": [
+        "Describe the principles of oxygen transport",
+        "Describe the structure of hemoglobin",
+        "Compare and contrast fetal and adult hemoglobin",
+        "Describe the principles of carbon dioxide transport"
+      ],
+      "n_blocks": 18,
+      "n_book_questions": 4
+    },
+    {
+      "section": "22.6",
+      "module_id": "m46524",
+      "title": "Modifications in Respiratory Functions",
+      "objectives": [
+        "Define the terms hyperpnea and hyperventilation",
+        "Describe the effect of exercise on the respiratory system",
+        "Describe the effect of high altitude on the respiratory system",
+        "Discuss the process of acclimatization"
+      ],
+      "n_blocks": 8,
+      "n_book_questions": 3
+    },
+    {
+      "section": "22.7",
+      "module_id": "m46518",
+      "title": "Embryonic Development of the Respiratory System",
+      "objectives": [
+        "Create a timeline of the phases of respiratory development in the fetus",
+        "Propose reasons for fetal breathing movements",
+        "Explain how the lungs become inflated after birth"
+      ],
+      "n_blocks": 9,
+      "n_book_questions": 5
+    }
+  ],
+  "url_status": {
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-2-cardiac-muscle-and-electrical-activity": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-3-cardiac-cycle": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-4-cardiac-physiology": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-5-development-of-the-heart": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-introduction": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-1-organs-and-structures-of-the-respiratory-system": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-2-the-lungs": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-3-the-process-of-breathing": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-5-transport-of-gases": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-6-modifications-in-respiratory-functions": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-7-embryonic-development-of-the-respiratory-system": 200,
+    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-introduction": 200
+  }
+}
