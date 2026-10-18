@@ -185,7 +185,8 @@ def to_markdown(m: dict) -> str:
 
     a = m["auto"]
     add("## Automatic checks\n")
-    add(f"Auto-rejected (at least one hard check failed): **{pct(a['auto_reject'])}**. Status counts: {a['status']}.\n")
+    counts = ", ".join(f"{v} {k}" for k, v in sorted(a["status"].items(), key=lambda kv: -kv[1]))
+    add(f"Auto-rejected (at least one hard check failed): **{pct(a['auto_reject'])}** ({counts}).\n")
     add("| Primary failure | Share of generated questions |\n|---|---|")
     for k, r in a["primary_failure"].items():
         add(f"| {label(k)} | {pct(r, ci=False)} |")
