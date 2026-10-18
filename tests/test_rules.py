@@ -25,8 +25,22 @@ def test_clean_question_passes_every_rule(question, chunk):
 
 
 def test_near_duplicate_options_fail(question):
-    q = question.model_copy(update={"options": ["sinoatrial node", "the sinoatrial node", "AV node", "bundle"]})
-    assert options_distinct(q).passed is False
+    q = question.model_copy(update={"options": ["sinoatrial node", "the sinoatrial nodes", "AV node", "bundle"]})
+    r = options_distinct(q)
+    assert r.passed is False and r.detail["duplicates"] == [[0, 1]]
+
+
+def test_contrasting_options_are_not_duplicates(question):
+    # all of these came up as false alarms with fuzzy, order-blind matching
+    for a, b in [
+        ("Oxygen will move from the alveoli into the blood.", "Oxygen will move from the blood into the alveoli."),
+        ("It increases the amount of oxygen.", "It decreases the amount of oxygen."),
+        ("Parasympathetic nervous system", "Sympathetic nervous system"),
+        ("3000 milliliters", "2000 milliliters"),
+        ("The receptors will not be stimulated.", "The receptors will be stimulated."),
+    ]:
+        q = question.model_copy(update={"options": [a, b, "x node", "y fibers"]})
+        assert options_distinct(q).passed is True, (a, b)
 
 
 def test_all_and_none_of_the_above(question):

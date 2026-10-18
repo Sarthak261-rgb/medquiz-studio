@@ -42,8 +42,11 @@ def run_checks(
     settings: Settings,
     stages: tuple[str, ...] = STAGES,
     progress: Callable[[str], None] = print,
+    force: bool = False,
 ) -> None:
-    done = {(r["question_id"], r["stage"]) for r in run.read("checks.jsonl")}
+    """With force, the listed stages run again for every question. The new rows are
+    appended and win over the old ones, which stay in the file as a record."""
+    done = set() if force else {(r["question_id"], r["stage"]) for r in run.read("checks.jsonl")}
     ccfg = settings.checks
 
     def write(q: Question, stage: str, results: list[CheckResult]) -> None:

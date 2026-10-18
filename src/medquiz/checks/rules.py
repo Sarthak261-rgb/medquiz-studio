@@ -34,12 +34,24 @@ def _result(name: str, passed: bool | None, score: float | None = None, **detail
     return CheckResult(name=name, checker="rule", passed=passed, score=score, detail=detail)
 
 
+def _option_tokens(option: str) -> tuple[str, ...]:
+    words = re.findall(r"[a-z0-9]+", norm(option))
+    return tuple(w.removesuffix("s") if len(w) > 3 else w for w in words if w not in {"the", "a", "an"})
+
+
 def options_distinct(q: Question) -> CheckResult:
-    opts = [re.sub(r"^(the|a|an) ", "", norm(o)) for o in q.options]
-    pairs = [(i, j) for i in range(len(opts)) for j in range(i + 1, len(opts))]
-    sims = {(i, j): fuzz.token_sort_ratio(opts[i], opts[j]) for i, j in pairs}
-    (i, j), worst = max(sims.items(), key=lambda kv: kv[1])
-    return _result("options_distinct", worst < 92, worst, most_similar=[i, j])
+    """Two options are duplicates if they are the same words in the same order once
+    articles and plurals are ignored ("sinoatrial node" / "the sinoatrial nodes").
+
+    Fuzzy matching is deliberately not used to decide: the first version flagged
+    13 of 151 questions and all 13 were good contrasting options ("increased" /
+    "decreased", "from the alveoli into the blood" / "from the blood into the
+    alveoli"). Paraphrased duplicates are left to judge_single_correct."""
+    toks = [_option_tokens(o) for o in q.options]
+    dupes = [[i, j] for i in range(4) for j in range(i + 1, 4) if toks[i] == toks[j]]
+    sims = {(i, j): fuzz.ratio(" ".join(toks[i]), " ".join(toks[j])) for i in range(4) for j in range(i + 1, 4)}
+    (i, j), closest = max(sims.items(), key=lambda kv: kv[1])
+    return _result("options_distinct", not dupes, closest, duplicates=dupes, most_similar=[i, j])
 
 
 def no_all_none_of_above(q: Question) -> CheckResult:

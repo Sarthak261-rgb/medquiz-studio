@@ -133,6 +133,7 @@ def _record_checkers(run: RunDir, s) -> None:
 def check(
     run_id: str = typer.Argument(..., help="Folder name under runs/"),
     stages: str = typer.Option("rules,retrieval,nli,judge,selfjudge", help="Comma-separated subset"),
+    force: bool = typer.Option(False, help="Re-run these stages for every question (old rows are kept)"),
 ):
     """Run the automatic checks on a run. Each stage resumes where it stopped."""
     from .checks.runner import run_checks
@@ -144,7 +145,9 @@ def check(
     if not questions:
         raise typer.BadParameter(f"no questions in {run.path}")
     _record_checkers(run, s)
-    run_checks(run, questions, _chunks_by_id(s), s, tuple(stages.split(",")), progress=typer.echo)
+    run_checks(run, questions, _chunks_by_id(s), s, tuple(stages.split(",")), progress=typer.echo, force=force)
+    if force:
+        run.update_meta(rechecked={st: utcnow() for st in stages.split(",")})
 
 
 @app.command()
