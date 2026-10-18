@@ -244,6 +244,45 @@ def closed_book(questions: list[dict], checks: dict) -> dict:
 JUDGE_CHECKS = ["blind_solve", "answer_grounded", "single_correct", "distractor_quality", "stem_clear"]
 
 
+def ablation(questions: list[dict], checks: dict, reviews: dict[str, dict], settings: Settings) -> list[dict]:
+    """Leave one hard check out at a time, plus rules-only and judge-only gates.
+    Nothing here changes the configured gate; it shows what each check costs and buys."""
+    cfg = settings.checks
+    variants = [("configured gate", cfg.hard)]
+    variants += [(f"without {h}", [x for x in cfg.hard if x != h]) for h in cfg.hard]
+    variants += [
+        ("rules and retrieval only", [x for x in cfg.hard if not x.startswith("judge_")]),
+        ("LLM judge only", [x for x in cfg.hard if x.startswith("judge_")]),
+    ]
+    out = []
+    for label, hard in variants:
+        vcfg = cfg.model_copy(update={"hard": hard})
+        rows = []
+        for q in questions:
+            v = auto_verdict(_results(checks.get(q["id"], {})), vcfg, applicable(_q(q), hard))
+            if v.status != "incomplete":
+                rows.append((q["id"], v.status == "fail"))
+        row = {"variant": label, "auto_reject": rate(sum(f for _, f in rows), len(rows))}
+        pairs = [(f, reviews[qid]["decision"] == "reject") for qid, f in rows if qid in reviews]
+        if pairs:
+            c = confusion([p for p, _ in pairs], [h for _, h in pairs])
+            row.update({k: c[k] for k in ("n", "accuracy", "precision", "recall", "kappa")})
+        out.append(row)
+    return out
+
+
+def plausibility_by_verdict(questions: list[dict], checks: dict, prefix: str = "judge") -> dict:
+    """Does the judge call a distractor implausible just because the passage does not
+    mention it? Counts of plausibility labels for each verdict, distractors only."""
+    table: dict[str, Counter] = defaultdict(Counter)
+    for q in questions:
+        verdicts = checks.get(q["id"], {}).get(f"{prefix}_answer_grounded", {}).get("detail", {}).get("verdicts", {})
+        for letter, v in verdicts.items():
+            if letter != LETTERS[q["answer_index"]]:
+                table[v["verdict"]][v["plausibility"]] += 1
+    return {verdict: dict(c) for verdict, c in sorted(table.items())}
+
+
 def judges(questions: list[dict], checks: dict, reviews: dict[str, dict], settings: Settings) -> dict | None:
     """The independent judge against the generator grading its own questions.
 

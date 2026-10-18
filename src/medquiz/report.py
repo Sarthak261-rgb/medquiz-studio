@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .config import Settings
 from .metrics import (
+    ablation,
     agreement,
     auto_summary,
     book_control,
@@ -17,6 +18,7 @@ from .metrics import (
     judges,
     latest_by_question,
     levels,
+    plausibility_by_verdict,
     primary_reviewer,
     solve_rate,
     stress_test,
@@ -100,6 +102,11 @@ def compute(snap: dict, settings: Settings, gen_run: str | None = None, reviewer
         "closed_book": closed_book(generated, checks),
         "options_only": solve_rate(generated, checks, "options_only_solve"),
         "judges": judges(generated, checks, reviews, settings),
+        "ablation": ablation(generated, checks, reviews, settings),
+        "plausibility_by_verdict": {
+            "judge": plausibility_by_verdict(generated, checks, "judge"),
+            "self": plausibility_by_verdict(generated, checks, "self"),
+        },
         "book_control": book_control(book, checks, settings) if book else None,
         "retrieval": book_meta.get("retrieval_eval"),
         "stress_test": stress_test(mutants, {q["id"]: q for q in generated}, checks, settings) if mutants else None,
@@ -254,6 +261,34 @@ def to_markdown(m: dict) -> str:
         add(f"{len(ag['disagreements'])} disagreements are listed in `reports/metrics.json`.\n")
     else:
         add("Needs human review first.\n")
+
+    ab = m.get("ablation")
+    if ab:
+        add("## What each hard check costs\n")
+        add(
+            "The configured gate was fixed before any human review. This table only shows what happens when "
+            "one hard check is dropped, or when only the rules or only the judge are used.\n"
+        )
+        has_h = any("kappa" in r for r in ab)
+        head = "| Gate | Auto-rejected |" + (" Accuracy | Precision | Recall | Kappa |" if has_h else "")
+        add(head + "\n|---|---|" + ("---|---|---|---|" if has_h else ""))
+        for r in ab:
+            line = f"| {r['variant']} | {pct(r['auto_reject'], ci=False)} |"
+            if has_h:
+                line += f" {num(r.get('accuracy'))} | {num(r.get('precision'))} | {num(r.get('recall'))} | {num(r.get('kappa'))} |"
+            add(line)
+        add("")
+
+    pv = (m.get("plausibility_by_verdict") or {}).get("judge")
+    if pv:
+        add('### Is "implausible" just "not in the passage"?\n')
+        add("Distractor plausibility labels from the independent judge, split by its verdict on the same option.\n")
+        add("| Verdict | low | medium | high | Share low |\n|---|---|---|---|---|")
+        for verdict, c in pv.items():
+            tot = sum(c.get(k, 0) for k in ("low", "medium", "high"))
+            share = f"{100 * c.get('low', 0) / tot:.0f}%" if tot else "n/a"
+            add(f"| {verdict} | {c.get('low', 0)} | {c.get('medium', 0)} | {c.get('high', 0)} | {share} |")
+        add("")
 
     st = m.get("stress_test")
     if st:
