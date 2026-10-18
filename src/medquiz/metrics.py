@@ -351,6 +351,11 @@ def stress_test(mutants: list[dict], parents: dict[str, dict], checks: dict, set
     return out
 
 
+EXPERIMENT_STAGES = {"check_selfjudge"}
+# judge calls that only feed analysis (they never block a question)
+DIAGNOSTIC_CALLS = {"closed_book_solve", "options_only_solve"}
+
+
 def cost(snapshot: dict, gen_run: str, settings: Settings, accepted: int | None, auto_passed: int) -> dict:
     meta = snapshot["runs"].get(gen_run, {})
     stages = meta.get("stages", {})
@@ -358,8 +363,11 @@ def cost(snapshot: dict, gen_run: str, settings: Settings, accepted: int | None,
     n = len(qs)
     gen_tokens = sum(q["gen"].get("prompt_tokens", 0) + q["gen"].get("completion_tokens", 0) for q in qs)
     gen_secs = sum(q["gen"].get("seconds", 0) for q in qs)
-    check_tokens = sum(c.get("tokens", 0) for q in qs for c in snapshot["checks"].get(q["id"], {}).values())
-    check_secs = sum(c.get("seconds", 0) for q in qs for c in snapshot["checks"].get(q["id"], {}).values())
+    # the self-judge is an experiment about judges, not part of making questions
+    prod = [(n, c) for q in qs for n, c in snapshot["checks"].get(q["id"], {}).items() if not n.startswith("self_")]
+    check_tokens = sum(c.get("tokens", 0) for _, c in prod)
+    check_secs = sum(c.get("seconds", 0) for _, c in prod)
+    diag_tokens = sum(c.get("tokens", 0) for n, c in prod if n in DIAGNOSTIC_CALLS)
     stage_rows = {
         k: {
             "seconds": v.get("seconds"),
@@ -368,8 +376,9 @@ def cost(snapshot: dict, gen_run: str, settings: Settings, accepted: int | None,
         }
         for k, v in stages.items()
     }
-    wall = sum(v.get("seconds") or 0 for v in stages.values())
-    joules = sum(v.get("gpu_joules") or 0 for v in stages.values())
+    production = {k: v for k, v in stages.items() if k not in EXPERIMENT_STAGES}
+    wall = sum(v.get("seconds") or 0 for v in production.values())
+    joules = sum(v.get("gpu_joules") or 0 for v in production.values())
     wh = joules / 3600
     inr = wh / 1000 * settings.cost.electricity_inr_per_kwh
 
@@ -379,7 +388,12 @@ def cost(snapshot: dict, gen_run: str, settings: Settings, accepted: int | None,
     return {
         "n_generated": n,
         "stages": stage_rows,
-        "llm_tokens": {"generation": gen_tokens, "checks": check_tokens},
+        "production_stages": sorted(production),
+        "llm_tokens": {
+            "generation": gen_tokens,
+            "checks": check_tokens,
+            "diagnostic_share_of_checks": per(diag_tokens, check_tokens),
+        },
         "llm_seconds": {"generation": round(gen_secs, 1), "checks": round(check_secs, 1)},
         "total_wall_seconds": round(wall, 1),
         "total_gpu_wh": round(wh, 2),

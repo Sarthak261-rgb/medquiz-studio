@@ -326,11 +326,19 @@ def to_markdown(m: dict) -> str:
             "Everything ran locally, so the cost is time and electricity. GPU energy is read from the "
             "driver's energy counter, not estimated.\n"
         )
-        add("| Stage | Items | Wall time (s) | GPU energy (Wh) |\n|---|---|---|---|")
+        add("| Stage | Items | Wall time (s) | GPU energy (Wh) | Counted in cost |\n|---|---|---|---|---|")
         for k, r in c["stages"].items():
-            add(f"| {k} | {r.get('n') or ''} | {num(r['seconds'], 0)} | {num(r['gpu_wh'])} |")
+            counted = "yes" if k in c.get("production_stages", []) else "no (experiment)"
+            add(f"| {k} | {r.get('n') or ''} | {num(r['seconds'], 0)} | {num(r['gpu_wh'])} | {counted} |")
+        share = c["llm_tokens"].get("diagnostic_share_of_checks")
+        diag = (
+            f" ({100 * share:.0f}% of that is the closed-book and options-only diagnostics, which never block a question)"
+            if share
+            else ""
+        )
         add(
-            f"\nLLM tokens: {c['llm_tokens']['generation']:,} for generation, {c['llm_tokens']['checks']:,} for checks.\n"
+            f"\nLLM tokens: {c['llm_tokens']['generation']:,} for generation and {c['llm_tokens']['checks']:,} for "
+            f"checks{diag}. The self-judge experiment is left out of every cost figure.\n"
         )
         add("| Per | Seconds | Tokens | GPU Wh |\n|---|---|---|---|")
         add(
