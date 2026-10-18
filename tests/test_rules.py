@@ -37,6 +37,7 @@ def test_contrasting_options_are_not_duplicates(question):
         ("It increases the amount of oxygen.", "It decreases the amount of oxygen."),
         ("Parasympathetic nervous system", "Sympathetic nervous system"),
         ("3000 milliliters", "2000 milliliters"),
+        ("CO = HR − SV", "CO = HR × SV"),
         ("The receptors will not be stimulated.", "The receptors will be stimulated."),
     ]:
         q = question.model_copy(update={"options": [a, b, "x node", "y fibers"]})

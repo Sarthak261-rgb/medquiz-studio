@@ -35,7 +35,8 @@ def _result(name: str, passed: bool | None, score: float | None = None, **detail
 
 
 def _option_tokens(option: str) -> tuple[str, ...]:
-    words = re.findall(r"[a-z0-9]+", norm(option))
+    # operators are words here: "CO = HR x SV" and "CO = HR - SV" are different answers
+    words = re.findall(r"[a-z0-9]+|[-+−×÷*/=<>≤≥%^]", norm(option))
     return tuple(w.removesuffix("s") if len(w) > 3 else w for w in words if w not in {"the", "a", "an"})
 
 
