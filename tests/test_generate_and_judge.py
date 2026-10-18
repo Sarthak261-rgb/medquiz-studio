@@ -127,3 +127,38 @@ def test_distractor_statements_swap_the_key(question):
     assert distractor_statements(q) == [None, None, None]
     assert _replace_key("The SA node fires.", "SA node", "AV node") == "The AV node fires."
     assert _replace_key("Nothing here.", "SA node", "AV node") == ""
+
+
+def test_nli_lexical_guard():
+    from medquiz.checks.nli import mentions
+
+    span = "Cardiology is the study of the heart, and cardiologists are the physicians who treat it."
+    assert mentions(span, "cardiology")
+    assert not mentions(span, "hematology")
+    assert mentions(span, "the")  # nothing to check, so it does not block
+
+
+def test_self_judge_uses_its_own_names(settings, question, chunk):
+    from medquiz.checks.judge import self_judge_checks
+
+    llm = FakeLLM({"SolveOut": [{"reason": "r", "answer": "B", "confidence": 5}], "AuditOut": [_verdicts()]})
+    names = [r.name for r in self_judge_checks(llm, settings.self_judge, question, chunk.text)]
+    assert names == [
+        "self_blind_solve",
+        "self_answer_grounded",
+        "self_single_correct",
+        "self_distractor_quality",
+        "self_stem_clear",
+        "self_level",
+    ]
+    assert llm.calls[0][0] == settings.self_judge.model
+
+
+def test_options_only_hides_stem_and_passage(settings, question):
+    from medquiz.checks.judge import options_only
+
+    llm = FakeLLM({"SolveOut": [{"reason": "r", "answer": "B", "confidence": 2}]})
+    r = options_only(llm, settings.judge, question)
+    assert r.name == "options_only_solve" and r.passed is True
+    _, system, user = llm.calls[0]
+    assert question.stem not in user and "sinoatrial node" in user

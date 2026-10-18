@@ -50,14 +50,26 @@ def ingest(check_urls: bool = typer.Option(False, help="HEAD every cited page on
         "pages": pages,
     }
     if check_urls:
+        import re
+
         import httpx
 
-        status = {}
+        # every page must load, and every paragraph id a chunk cites must exist on
+        # that page, so a citation link lands on the exact paragraph
+        status, cited, missing = {}, 0, []
         for url in sorted({c.url for c in chunks}):
-            status[url] = httpx.head(url, follow_redirects=True, timeout=30).status_code
+            resp = httpx.get(url, follow_redirects=True, timeout=60)
+            status[url] = resp.status_code
+            anchors = set(re.findall(r'id="([^"]+)"', resp.text))
+            for c in chunks:
+                if c.url == url:
+                    cited += len(c.para_ids)
+                    missing += [f"{c.id}#{p}" for p in c.para_ids if p not in anchors]
         manifest["url_status"] = status
+        manifest["citation_anchors"] = {"cited": cited, "found": cited - len(missing), "missing": missing}
         bad = {u: c for u, c in status.items() if c != 200}
         typer.echo(f"checked {len(status)} page URLs, {len(bad)} not OK {bad if bad else ''}")
+        typer.echo(f"citation anchors: {cited - len(missing)} of {cited} paragraph ids found on openstax.org")
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     typer.echo(f"{len(modules)} pages -> {len(chunks)} chunks, {len(book_qs)} book MCQs -> {out}")
 

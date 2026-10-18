@@ -16,6 +16,7 @@ import time
 
 import pandas as pd
 import streamlit as st
+from pydantic import ValidationError
 
 from medquiz.config import get_settings
 from medquiz.report import compute
@@ -46,7 +47,7 @@ def highlight(passage: str, quote: str) -> str:
 
 
 def show_question(q: dict, reveal_key: bool = True) -> None:
-    st.markdown(f"#### {q['stem']}")
+    st.subheader(q["stem"], anchor=False)
     for i, opt in enumerate(q["options"]):
         mark = "  **(key)**" if reveal_key and i == q["answer_index"] else ""
         st.markdown(f"**{LETTERS[i]}.** {opt}{mark}")
@@ -116,16 +117,19 @@ if page == "Review queue":
     if last:
         prev = db.question(last["id"])
         verdict = prev["auto_status"]
-        agree = (verdict == "fail") == (last["decision"] == "reject")
-        with st.expander(
-            f"Previous question: you {last['decision']}ed, checks said {verdict}"
-            + ("" if agree else "  (disagreement)"),
-            expanded=not agree,
-        ):
+        if verdict in ("pass", "fail"):
+            agree = (verdict == "fail") == (last["decision"] == "reject")
+            title = f"Previous question: you {last['decision']}ed, checks said {verdict}"
+            title += "" if agree else "  (disagreement)"
+        else:
+            agree = True
+            title = f"Previous question: you {last['decision']}ed; automatic checks have not finished for it yet"
+        with st.expander(title, expanded=not agree):
             st.write(prev["stem"])
             if prev["auto_failures"]:
                 st.write("Failed hard checks map to: " + ", ".join(prev["auto_failures"]))
-            show_checks(prev)
+            if prev["checks"]:
+                show_checks(prev)
 
     qid = db.next_for_review(reviewer, run_id=run_id)
     if qid is None:
@@ -142,9 +146,12 @@ if page == "Review queue":
     with right:
         show_source(q)
 
-    with st.form(key=f"review-{qid}", clear_on_submit=True):
+    # one form per question, so a new question always starts empty; a failed
+    # submit keeps what was typed
+    with st.form(key=f"review-{qid}"):
         c1, c2 = st.columns([1, 2])
-        decision = c1.radio("Decision", ["accept", "reject"], horizontal=True)
+        # no default: an unthinking click must not count as an accept
+        decision = c1.radio("Decision", ["accept", "reject"], horizontal=True, index=None)
         level = c1.radio("Level", ["recall", "reasoning"], horizontal=True, index=None)
         reasons = c2.multiselect(
             "Reasons (first one counts as primary)",
@@ -155,6 +162,8 @@ if page == "Review queue":
         submitted = st.form_submit_button("Submit and next", type="primary")
     if submitted:
         try:
+            if decision is None:
+                raise ValueError("Pick accept or reject.")
             review = ReviewIn(
                 reviewer=reviewer,
                 decision=decision,
@@ -163,8 +172,10 @@ if page == "Review queue":
                 note=note,
                 seconds=time.time() - shown.get(qid, time.time()),
             )
+        except ValidationError as e:
+            st.error(e.errors()[0]["msg"].removeprefix("Value error, "))
         except ValueError as e:
-            st.error(str(e).split("\n")[-1] if "\n" in str(e) else str(e))
+            st.error(str(e))
         else:
             db.add_review(qid, review)
             st.session_state["last"] = {"id": qid, "decision": decision}

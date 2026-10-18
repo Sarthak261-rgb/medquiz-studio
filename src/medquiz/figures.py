@@ -94,6 +94,43 @@ def stress_test(m: dict, out: Path) -> Path | None:
     return path
 
 
+def judges(m: dict, out: Path) -> Path | None:
+    jd = m.get("judges")
+    if not jd:
+        return None
+    names = list(jd["per_check"])
+    series = [
+        (
+            f"Independent judge ({jd['judge_model'].split(':')[0]})",
+            [jd["per_check"][n]["judge_pass"]["rate"] for n in names],
+        ),
+        (
+            f"Generator judging itself ({jd['self_model'].split(':')[0]})",
+            [jd["per_check"][n]["self_pass"]["rate"] for n in names],
+        ),
+    ]
+    fig, ax = plt.subplots(figsize=(8, 0.6 * len(names) + 1.5), dpi=150, facecolor=SURFACE)
+    h = 0.34
+    for i, (label, vals) in enumerate(series):
+        offset = (i - 0.5) * (h + 0.04)
+        ys = [y - offset for y in range(len(names))]
+        ax.barh(ys, [v or 0 for v in vals], height=h, color=SERIES[i], label=label)
+        for y, v in zip(ys, vals, strict=True):
+            if v is not None:
+                ax.text(v + 0.012, y, f"{100 * v:.0f}%", va="center", fontsize=8, color=INK_2)
+    ax.set_yticks(range(len(names)), [n.replace("_", " ") for n in names], color=INK, fontsize=9)
+    _style(ax, 1.15)
+    ax.set_title(
+        "Share of questions each judge passes, same prompts and passages", loc="left", color=INK, fontsize=11, pad=24
+    )
+    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2, frameon=False, fontsize=9, labelcolor=INK_2)
+    fig.tight_layout()
+    path = out / "judges.png"
+    fig.savefig(path, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 def make_figures(m: dict, out: Path) -> list[Path]:
     out.mkdir(parents=True, exist_ok=True)
-    return [p for p in (failure_breakdown(m, out), stress_test(m, out)) if p]
+    return [p for p in (failure_breakdown(m, out), stress_test(m, out), judges(m, out)) if p]

@@ -8,7 +8,7 @@ from medquiz.checks.rules import (
     stem_leak,
     text_reference,
 )
-from medquiz.schemas import CheckResult, FailureType
+from medquiz.schemas import CheckResult, FailureType, Question
 
 
 def test_clean_question_passes_every_rule(question, chunk):
@@ -98,3 +98,46 @@ def test_auto_verdict(settings):
     soft = ok + [_c("length_cue", False)]
     v = auto_verdict(soft, settings.checks)
     assert v.status == "pass" and v.failed_soft == ["length_cue"]
+
+
+def test_negative_stem():
+    from medquiz.checks.rules import negative_stem
+
+    def q(stem):
+        return Question(id="x", run_id="r", chunk_id="c", stem=stem, options=list("abcd"), answer_index=0)
+
+    assert negative_stem(q("Which of the following is NOT a heart valve?")).passed is False
+    assert negative_stem(q("Which of these is not part of the conduction system?")).passed is False
+    assert negative_stem(q("All of the following are true EXCEPT:")).passed is False
+    # a negation inside a scenario is fine
+    assert negative_stem(q("If the mitral valve does not close fully, where does blood flow?")).passed is True
+
+
+def test_absolute_terms(question):
+    from medquiz.checks.rules import absolute_terms
+
+    q = question.model_copy(update={"options": ["It never fires", "sinoatrial node", "It always delays", "fibers"]})
+    r = absolute_terms(q)
+    assert r.passed is False and r.detail["flagged"] == [0, 2]
+    assert absolute_terms(question).passed is True
+
+
+def test_numeric_grounding(question, chunk):
+    from medquiz.checks.rules import numeric_grounding
+
+    ok = question.model_copy(update={"options": ["50 ms", "100 ms", "150 ms", "200 ms"], "answer_index": 1})
+    assert numeric_grounding(ok, chunk).passed is True
+    bad = ok.model_copy(update={"answer_index": 3})
+    r = numeric_grounding(bad, chunk)
+    assert r.passed is False and r.detail["missing"] == ["200"]
+    assert numeric_grounding(question, chunk).passed is None  # no number in the key
+
+
+def test_key_terms_in_source(question, chunk):
+    from medquiz.checks.rules import key_terms_in_source
+
+    assert key_terms_in_source(question, chunk).passed is True
+    off = question.model_copy(
+        update={"options": ["vagus nerve", "baroreceptor reflex arc", "c", "d"], "answer_index": 1}
+    )
+    assert key_terms_in_source(off, chunk).passed is False

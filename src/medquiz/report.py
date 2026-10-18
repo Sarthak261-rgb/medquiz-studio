@@ -14,9 +14,11 @@ from .metrics import (
     closed_book,
     cost,
     human_summary,
+    judges,
     latest_by_question,
     levels,
     primary_reviewer,
+    solve_rate,
     stress_test,
 )
 from .schemas import FAILURE_LABELS, FailureType
@@ -96,6 +98,8 @@ def compute(snap: dict, settings: Settings, gen_run: str | None = None, reviewer
         "agreement": agreement(generated, reviews, checks, settings),
         "levels": levels(generated, checks, reviews),
         "closed_book": closed_book(generated, checks),
+        "options_only": solve_rate(generated, checks, "options_only_solve"),
+        "judges": judges(generated, checks, reviews, settings),
         "book_control": book_control(book, checks, settings) if book else None,
         "retrieval": book_meta.get("retrieval_eval"),
         "stress_test": stress_test(mutants, {q["id"]: q for q in generated}, checks, settings) if mutants else None,
@@ -187,6 +191,41 @@ def to_markdown(m: dict) -> str:
         f"\nClosed-book solve (judge answers with no passage): {pct(m['closed_book'], ci=False)} correct. "
         "A high number means many questions test general knowledge rather than the passage.\n"
     )
+    oo = m.get("options_only")
+    if oo and oo.get("n"):
+        lo, hi = oo["ci95"]
+        verdict = "above" if lo > 0.25 else "not clearly above"
+        add(
+            f"Options only (judge sees the four options, no stem and no passage): {pct(oo)} correct, "
+            f"{verdict} the 25% a blind guess would get. Anything well above chance means the options "
+            "themselves leak the answer.\n"
+        )
+
+    jd = m.get("judges")
+    if jd:
+        add("## Judge vs judge: does the generator grade itself more kindly?\n")
+        add(
+            f"Same prompts, passages and decision rule; only the judge model changes: `{jd['judge_model']}` "
+            f"(independent) against `{jd['self_model']}` (the generator itself).\n"
+        )
+        add("| Check | Independent judge passes | Self-judge passes | Agreement | Kappa |\n|---|---|---|---|---|")
+        for name, r in jd["per_check"].items():
+            add(
+                f"| {name.replace('_', ' ')} | {pct(r['judge_pass'], ci=False)} | {pct(r['self_pass'], ci=False)} | "
+                f"{num(r['agreement'])} | {num(r['kappa'])} |"
+            )
+        add(
+            f"\nAuto-reject rate with the independent judge: {pct(jd['auto_reject_with_judge'])}. "
+            f"With the generator as its own judge: {pct(jd['auto_reject_with_self'])}. "
+            f"Kappa between the two verdicts: {num(jd['verdict_kappa'])}.\n"
+        )
+        vh = jd.get("vs_human")
+        if vh:
+            add("| Judge | Accuracy vs human | Precision | Recall | Kappa |\n|---|---|---|---|---|")
+            for k in ("judge", "self"):
+                c = vh[k]
+                add(f"| {k} | {num(c['accuracy'])} | {num(c['precision'])} | {num(c['recall'])} | {num(c['kappa'])} |")
+            add("")
 
     ag = m["agreement"]
     add("## Judge vs human\n")

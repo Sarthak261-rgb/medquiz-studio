@@ -231,10 +231,66 @@ def levels(questions: list[dict], checks: dict, reviews: dict[str, dict]) -> dic
     }
 
 
-def closed_book(questions: list[dict], checks: dict) -> dict:
-    vals = [checks.get(q["id"], {}).get("closed_book_solve", {}).get("passed") for q in questions]
+def solve_rate(questions: list[dict], checks: dict, name: str) -> dict:
+    vals = [checks.get(q["id"], {}).get(name, {}).get("passed") for q in questions]
     vals = [v for v in vals if v is not None]
     return rate(sum(vals), len(vals))
+
+
+def closed_book(questions: list[dict], checks: dict) -> dict:
+    return solve_rate(questions, checks, "closed_book_solve")
+
+
+JUDGE_CHECKS = ["blind_solve", "answer_grounded", "single_correct", "distractor_quality", "stem_clear"]
+
+
+def judges(questions: list[dict], checks: dict, reviews: dict[str, dict], settings: Settings) -> dict | None:
+    """The independent judge against the generator grading its own questions.
+
+    Same prompts, same passages, same decision rule; only the model differs. If the
+    generator passes its own questions more often, that is self-preference."""
+    if not any("self_blind_solve" in checks.get(q["id"], {}) for q in questions):
+        return None
+    cfg = settings.checks
+    self_cfg = cfg.model_copy(update={"hard": [n.replace("judge_", "self_", 1) for n in cfg.hard]})
+    per_check = {}
+    for name in JUDGE_CHECKS:
+        a, b = [], []
+        for q in questions:
+            c = checks.get(q["id"], {})
+            x, y = c.get(f"judge_{name}", {}).get("passed"), c.get(f"self_{name}", {}).get("passed")
+            if x is not None and y is not None:
+                a.append(x)
+                b.append(y)
+        per_check[name] = {
+            "judge_pass": rate(sum(a), len(a)),
+            "self_pass": rate(sum(b), len(b)),
+            "agreement": round(sum(x == y for x, y in zip(a, b, strict=True)) / len(a), 4) if a else None,
+            "kappa": cohen_kappa(a, b),
+        }
+    verdicts = []
+    for q in questions:
+        res = _results(checks.get(q["id"], {}))
+        v_j = auto_verdict(res, cfg, applicable(_q(q), cfg.hard)).status
+        v_s = auto_verdict(res, self_cfg, applicable(_q(q), self_cfg.hard)).status
+        if "incomplete" not in (v_j, v_s):
+            verdicts.append((q["id"], v_j == "fail", v_s == "fail"))
+    out = {
+        "judge_model": settings.judge.model,
+        "self_model": settings.self_judge.model,
+        "per_check": per_check,
+        "auto_reject_with_judge": rate(sum(j for _, j, _ in verdicts), len(verdicts)),
+        "auto_reject_with_self": rate(sum(s for _, _, s in verdicts), len(verdicts)),
+        "verdict_kappa": cohen_kappa([j for _, j, _ in verdicts], [s for _, _, s in verdicts]),
+    }
+    reviewed = [(j, s, reviews[qid]["decision"] == "reject") for qid, j, s in verdicts if qid in reviews]
+    if reviewed:
+        human = [h for _, _, h in reviewed]
+        out["vs_human"] = {
+            "judge": confusion([j for j, _, _ in reviewed], human),
+            "self": confusion([s for _, s, _ in reviewed], human),
+        }
+    return out
 
 
 def book_control(book: list[dict], checks: dict, settings: Settings) -> dict:
