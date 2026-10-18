@@ -87,7 +87,13 @@ class OllamaClient:
                 },
             }
             t0 = time.perf_counter()
-            resp = self.http.post("/api/chat", json=body)
+            try:
+                resp = self.http.post("/api/chat", json=body)
+            except httpx.TransportError as e:
+                # a model swap on a full 6 GB card can stall a request; retry instead of dying
+                stats.seconds += time.perf_counter() - t0
+                stats.errors.append(f"{type(e).__name__}: {e}")
+                continue
             stats.seconds += time.perf_counter() - t0
             if resp.status_code != 200:
                 stats.errors.append(f"http {resp.status_code}: {resp.text[:200]}")

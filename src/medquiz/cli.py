@@ -220,6 +220,9 @@ def stress(
         embedder = Embedder(s.embedding)
         index = load_or_build(s.path("data") / "index", chunks, embedder)
         llm = OllamaClient(s.ollama_url)
+        # the paraphrases come from the generator; the judges must not still be holding the GPU
+        for model in {s.judge.model, s.self_judge.model} - {s.generator.model}:
+            llm.unload(model)
         mutants = make_mutants(parents, chunks, index, embedder, llm, s.generator, run.id, seed=seed)
         embedder.close()
         write_jsonl(run.path / "questions.jsonl", [q.model_dump() for q in mutants])

@@ -162,3 +162,18 @@ def test_options_only_hides_stem_and_passage(settings, question):
     assert r.name == "options_only_solve" and r.passed is True
     _, system, user = llm.calls[0]
     assert question.stem not in user and "sinoatrial node" in user
+
+
+def test_ollama_client_retries_transport_errors():
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise httpx.ReadTimeout("timed out", request=request)
+        return httpx.Response(200, json={"message": {"content": json.dumps(DRAFT)}, "eval_count": 5})
+
+    client = OllamaClient()
+    client.http = httpx.Client(base_url="http://x", transport=httpx.MockTransport(handler))
+    _, stats = client.chat_json("m", "s", "u", MCQDraft)
+    assert stats.attempts == 2 and "ReadTimeout" in stats.errors[0]
