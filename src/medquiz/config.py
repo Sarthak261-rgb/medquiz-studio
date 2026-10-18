@@ -49,6 +49,7 @@ class GeneratorCfg(BaseModel):
     temperature: float
     seed: int
     num_ctx: int = 4096
+    num_gpu: int | None = None
     questions_per_chunk: int = 1
 
 
@@ -57,6 +58,7 @@ class JudgeCfg(BaseModel):
     temperature: float = 0.0
     seed: int = 11
     num_ctx: int = 4096
+    num_gpu: int | None = None
 
 
 class NLICfg(BaseModel):
@@ -93,11 +95,13 @@ class Settings(BaseModel):
     embedding: EmbedCfg
     generator: GeneratorCfg
     judge: JudgeCfg
+    self_judge: JudgeCfg
     nli: NLICfg
     checks: ChecksCfg
     ollama_url: str
     paths: PathsCfg
     cost: CostCfg
+    primary_run: str | None = None
     config_hash: str = ""
 
     def path(self, name: str) -> Path:

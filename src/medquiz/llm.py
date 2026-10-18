@@ -42,6 +42,7 @@ class JSONChat(Protocol):
         temperature: float = 0.0,
         seed: int | None = None,
         num_ctx: int = 4096,
+        num_gpu: int | None = None,
         max_attempts: int = 3,
     ) -> tuple[T, CallStats]: ...
 
@@ -61,6 +62,7 @@ class OllamaClient:
         temperature: float = 0.0,
         seed: int | None = None,
         num_ctx: int = 4096,
+        num_gpu: int | None = None,
         max_attempts: int = 3,
     ) -> tuple[T, CallStats]:
         stats = CallStats(model=model)
@@ -78,6 +80,8 @@ class OllamaClient:
                 "options": {
                     "temperature": temperature,
                     "num_ctx": num_ctx,
+                    # layers on the GPU; Ollama's own estimate leaves ~20% on the CPU on a 6 GB card
+                    **({"num_gpu": num_gpu} if num_gpu is not None else {}),
                     # a new seed per retry, otherwise a bad sample repeats exactly
                     **({"seed": seed + attempt} if seed is not None else {}),
                 },

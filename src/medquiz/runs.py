@@ -18,9 +18,7 @@ def utcnow() -> str:
 
 def git_sha() -> str:
     try:
-        out = subprocess.run(
-            ["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT, capture_output=True, text=True
-        )
+        out = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT, capture_output=True, text=True)
         sha = out.stdout.strip()
         dirty = subprocess.run(
             ["git", "status", "--porcelain", "--", "src", "prompts", "configs"],
@@ -69,7 +67,7 @@ class RunDir:
                 meta[k].update(v)
             else:
                 meta[k] = v
-        self.meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        self.meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
         return meta
 
     def append(self, name: str, row: dict) -> None:

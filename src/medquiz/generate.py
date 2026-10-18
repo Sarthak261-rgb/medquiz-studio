@@ -7,6 +7,7 @@ import random
 from collections.abc import Callable
 
 from .config import GeneratorCfg
+from .energy import StageTracker, gpu_counter, joules_since
 from .llm import JSONChat, LLMError
 from .prompts import render
 from .runs import RunDir, utcnow
@@ -39,9 +40,7 @@ def shuffle_options(options: list[str], answer_index: int, key: str) -> tuple[li
     return [options[p] for p in perm], perm.index(answer_index)
 
 
-def generate_question(
-    client: JSONChat, cfg: GeneratorCfg, chunk: Chunk, run_id: str, k: int, target: str
-) -> Question:
+def generate_question(client: JSONChat, cfg: GeneratorCfg, chunk: Chunk, run_id: str, k: int, target: str) -> Question:
     qid = question_id(run_id, chunk.id, k)
     seed = cfg.seed + int(hashlib.sha1(qid.encode()).hexdigest()[:6], 16) % 10_000
     system, user, phash = render(
@@ -60,6 +59,7 @@ def generate_question(
         temperature=cfg.temperature,
         seed=seed,
         num_ctx=cfg.num_ctx,
+        num_gpu=cfg.num_gpu,
     )
     options, answer = shuffle_options(draft.options, draft.answer_index, qid)
     return Question(
@@ -99,19 +99,24 @@ def generate_run(
     """Resumable: questions already in questions.jsonl are skipped."""
     done = {r["id"] for r in run.read("questions.jsonl")}
     made = []
+    tracker = StageTracker(run, "generate")
     for i, chunk in enumerate(chunks):
         for k in range(cfg.questions_per_chunk):
             qid = question_id(run.id, chunk.id, k)
             if qid in done:
                 continue
             target = target_for(i + k)
+            start = gpu_counter().millijoules()
             try:
                 q = generate_question(client, cfg, chunk, run.id, k, target)
             except LLMError as e:
                 run.append("errors.jsonl", {"chunk_id": chunk.id, "k": k, "error": str(e), "at": utcnow()})
                 progress(f"[{i + 1}/{len(chunks)}] {chunk.id} failed: {e}")
                 continue
+            q.gen.gpu_joules = joules_since(start)
             run.append("questions.jsonl", q.model_dump())
+            tracker.tick()
             made.append(q)
             progress(f"[{i + 1}/{len(chunks)}] {chunk.id} {target:9s} {q.gen.seconds:5.1f}s  {q.stem[:70]}")
+    tracker.flush()
     return made

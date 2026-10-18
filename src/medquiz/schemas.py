@@ -83,6 +83,7 @@ class GenMeta(BaseModel):
     seconds: float = 0.0
     attempts: int = 1
     original_answer_index: int | None = None
+    gpu_joules: float | None = None
 
 
 Origin = Literal["generated", "book", "mutant"]
@@ -163,6 +164,13 @@ CHECK_FAILURE: dict[str, FailureType] = {
     "options_distinct": FailureType.multiple_correct,
     "no_all_none_of_above": FailureType.item_writing_flaw,
     "stem_leak": FailureType.item_writing_flaw,
+    "text_reference": FailureType.item_writing_flaw,
+    "negative_stem": FailureType.item_writing_flaw,
+    "absolute_terms": FailureType.item_writing_flaw,
+    "numeric_grounding": FailureType.unsupported_answer,
+    "key_terms_in_source": FailureType.unsupported_answer,
+    "book_overlap": FailureType.duplicate,
+    "statement_consistent": FailureType.wrong_key,
     "length_cue": FailureType.item_writing_flaw,
     "evidence_in_source": FailureType.wrong_citation,
     "citation_retrieval": FailureType.wrong_citation,
@@ -173,6 +181,7 @@ CHECK_FAILURE: dict[str, FailureType] = {
     "judge_answer_grounded": FailureType.unsupported_answer,
     "judge_single_correct": FailureType.multiple_correct,
     "judge_distractor_quality": FailureType.weak_distractors,
+    "judge_stem_clear": FailureType.ambiguous_stem,
 }
 
 

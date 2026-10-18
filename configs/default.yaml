@@ -32,6 +32,7 @@ generator:
   temperature: 0.7
   seed: 7
   num_ctx: 4096
+  num_gpu: 99            # every layer on the GPU (Ollama's default split left ~20% on the CPU)
   questions_per_chunk: 1
 
 judge:
@@ -40,12 +41,21 @@ judge:
   temperature: 0.0
   seed: 11
   num_ctx: 4096
+  num_gpu: 99
+
+self_judge:
+  # The generator grading its own questions, to measure self-preference.
+  model: qwen2.5:7b-instruct-q4_K_M
+  temperature: 0.0
+  seed: 11
+  num_ctx: 4096
+  num_gpu: 99
 
 nli:
   model: cross-encoder/nli-deberta-v3-base
   device: cuda
   entail_threshold: 0.5
-  window_sentences: 3
+  window_sentences: 2     # premises are every 1- and 2-sentence span of the passage
 
 checks:
   quote_match_threshold: 90      # rapidfuzz partial_ratio, 0-100
@@ -65,12 +75,23 @@ checks:
     - judge_single_correct
     - judge_distractor_quality
   soft:
+    - text_reference
+    - negative_stem
+    - absolute_terms
     - length_cue
+    - statement_consistent
+    - numeric_grounding
+    - key_terms_in_source
     - citation_retrieval
+    - book_overlap
     - nli_answer_entailed
     - nli_distractors_not_entailed
+    - judge_stem_clear
 
 ollama_url: http://localhost:11434
+
+# The generation run that the report and the release are about.
+primary_run: gen-v1
 
 paths:
   data: data

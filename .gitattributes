@@ -1,0 +1,5 @@
+# Release manifests store sha256 hashes of the data files, so line endings must
+# not change on checkout.
+* text=auto eol=lf
+*.png binary
+*.npy binary

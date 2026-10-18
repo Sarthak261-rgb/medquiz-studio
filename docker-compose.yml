@@ -1,0 +1,27 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    volumes:
+      - db:/app/var
+      # reviews written in the container land in the repo's append-only logs
+      - ./data/reviews:/app/data/reviews
+
+  review:
+    build: .
+    command: streamlit run review_app/app.py --server.port 8501 --server.address 0.0.0.0
+    ports: ["8501:8501"]
+    environment:
+      MEDQUIZ_REVIEWER: ${MEDQUIZ_REVIEWER:-}
+    volumes:
+      - db:/app/var
+      - ./data/reviews:/app/data/reviews
+    depends_on:
+      api:
+        condition: service_healthy
+    # the api container builds the database; this one only reads and writes reviews
+    healthcheck:
+      disable: true
+
+volumes:
+  db:

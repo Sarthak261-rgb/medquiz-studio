@@ -152,9 +152,7 @@ def page_url(book_slug: str, chapter: int, index: int, title: str) -> str:
     return f"https://openstax.org/books/{book_slug}/pages/{page}"
 
 
-def parse_module(
-    xml: bytes, module_id: str, chapter: int, index: int, keep_notes: set[str]
-) -> ParsedModule:
+def parse_module(xml: bytes, module_id: str, chapter: int, index: int, keep_notes: set[str]) -> ParsedModule:
     root = ET.fromstring(xml)
     title = _title(root)
     objectives = []
@@ -237,7 +235,8 @@ def _parse_mcqs(section: ET.Element, mod: ParsedModule) -> list[BookQuestion]:
 # ----------------------------------------------------------------- chunk
 
 
-_SENT = re.compile(r"(?<=[.!?])\s+(?=[A-Z(])")
+# a sentence may end inside a closing quote or bracket: ... the Greek term, "kardia." Cardiology ...
+_SENT = re.compile(r"(?:(?<=[.!?])|(?<=[.!?][”\"’')\]]))\s+(?=[A-Z(“\"])")
 
 
 def split_sentences(text: str) -> list[str]:

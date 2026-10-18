@@ -1,0 +1,39 @@
+<document xmlns="http://cnx.rice.edu/cnxml">
+<title>Heart Anatomy </title>
+<metadata xmlns:md="http://cnx.rice.edu/mdml">
+  <md:content-id>m00001</md:content-id>
+  <md:abstract><para id="ab1">By the end of this section, you will be able to:</para>
+<list id="ab2"><item>Describe the location of the heart</item><item>Name the chambers</item></list></md:abstract>
+</metadata>
+<content>
+<para id="p-lead">The heart is a muscular pump that moves blood through two circuits of vessels, one to the lungs and one to the rest of the body, every minute of life.</para>
+<section id="s1">
+<title>Location of the Heart</title>
+<para id="p1">The human heart is located within the thoracic cavity, medially between the lungs in the space known as the <term id="t1">mediastinum</term>. <link target-id="fig-ch20_01_01" document=""/> shows the position of the heart (see <link target-id="fig-ch20_01_02" document=""/>). The base of the heart sits at the level of the third costal cartilage.</para>
+<figure id="fig-ch20_01_01"><title>Position of the Heart</title><media alt="heart"><image src="x.jpg" mime-type="image/jpeg"/></media><caption>Caption text that should not appear.</caption></figure>
+<note id="n1" class="anatomy interactive"><para id="n1p">Visit this site to watch a video of the heart beating.</para></note>
+<note id="n2" class="anatomy disorders"><title>Disorders of the Heart: Pericarditis</title><para id="n2p">Pericarditis is inflammation of the pericardium. It may be caused by infection or injury, and it often produces sharp chest pain that improves when the patient sits up and leans forward.</para></note>
+</section>
+<section id="s2">
+<title>Chambers</title>
+<para id="p2">The heart has four chambers: two atria and two ventricles. The atria receive blood returning to the heart and the ventricles pump it out.</para>
+<list id="l1"><item>right atrium</item><item>right ventricle</item><item>left atrium</item><item>left ventricle</item></list>
+</section>
+<section id="s3"><title>References</title><para id="r1">Someone, A. (2013). A paper about hearts that should never be quoted in a chunk.</para></section>
+<section id="rq" class="multiple-choice">
+<title>Review Questions</title>
+<exercise id="e1">
+<problem id="pr1"><para id="pr1p">Which valve separates the left atrium from the left ventricle?</para>
+<list id="pl1" list-type="enumerated" number-style="lower-alpha"><item>mitral</item><item>tricuspid</item><item>pulmonary</item><item>aortic</item></list>
+</problem>
+<solution id="so1"><label/><para id="so1p">A</para></solution>
+</exercise>
+<exercise id="e2">
+<problem id="pr2"><para id="pr2p">A question with only two options.</para>
+<list id="pl2"><item>yes</item><item>no</item></list>
+</problem>
+<solution id="so2"><para id="so2p">B</para></solution>
+</exercise>
+</section>
+</content>
+</document>

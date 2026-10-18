@@ -14,3 +14,4 @@ data/*.db
 data/*.db-journal
 data/index/
 .streamlit/secrets.toml
+logs/

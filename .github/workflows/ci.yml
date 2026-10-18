@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.1"
+      - name: Install (no GPU extras)
+        run: uv sync --frozen --extra dev
+      - name: Lint
+        run: uv run ruff check .
+      - name: Tests
+        run: uv run pytest -q
+      - name: Reported numbers reproduce from the committed data
+        run: |
+          uv run medquiz report
+          git diff --exit-code -- reports/metrics.json reports/results.md
+      - name: Release hashes match their manifests
+        run: |
+          for d in releases/v*/; do
+            [ -d "$d" ] || continue
+            v=$(basename "$d"); uv run medquiz verify-release "${v#v}"
+          done
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t medquiz .
+      - name: Smoke test
+        run: |
+          docker run -d --name mq -p 8000:8000 medquiz
+          for i in $(seq 1 30); do curl -fs localhost:8000/health && break; sleep 2; done
+          curl -fs localhost:8000/health | tee /dev/stderr | grep -q '"generated"'
+          curl -fs "localhost:8000/questions?limit=1" | grep -q '"stem"'
+          curl -fs localhost:8000/metrics | grep -q '"auto_reject"'
+          docker logs mq

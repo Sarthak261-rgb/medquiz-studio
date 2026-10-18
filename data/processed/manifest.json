@@ -2,7 +2,7 @@
   "source_repo": "openstax/osbooks-anatomy-physiology",
   "source_commit": "5ae32b3f4bc24ed003e91dc38bf47dba80751044",
   "license": "CC BY-NC-SA 4.0",
-  "created_at": "2026-10-18T09:33:17Z",
+  "created_at": "2026-10-18T10:53:58Z",
   "chunking": {
     "target_words": 220,
     "max_words": 320,
@@ -195,21 +195,5 @@
       "n_blocks": 9,
       "n_book_questions": 5
     }
-  ],
-  "url_status": {
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-2-cardiac-muscle-and-electrical-activity": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-3-cardiac-cycle": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-4-cardiac-physiology": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-5-development-of-the-heart": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-introduction": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-1-organs-and-structures-of-the-respiratory-system": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-2-the-lungs": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-3-the-process-of-breathing": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-5-transport-of-gases": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-6-modifications-in-respiratory-functions": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-7-embryonic-development-of-the-respiratory-system": 200,
-    "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-introduction": 200
-  }
+  ]
 }
