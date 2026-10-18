@@ -95,6 +95,8 @@ with st.sidebar:
     reviewer = st.text_input("Reviewer", value=os.environ.get("MEDQUIZ_REVIEWER", ""), max_chars=64).strip()
     run_id = st.selectbox("Run", [r["id"] for r in runs]) if runs else None
     page = st.radio("Page", ["Review queue", "Browse", "Metrics"], label_visibility="collapsed")
+    # off by default: seeing the judge's verdicts as you go slowly trains you to agree with it
+    reveal = st.checkbox("Show checks after each decision", value=False)
     if reviewer and run_id:
         total = next(r["n_questions"] for r in runs if r["id"] == run_id)
         mine = db.latest_reviews(reviewer)
@@ -114,7 +116,7 @@ if page == "Review queue":
         st.stop()
 
     last = st.session_state.get("last")
-    if last:
+    if last and reveal:
         prev = db.question(last["id"])
         verdict = prev["auto_status"]
         if verdict in ("pass", "fail"):
