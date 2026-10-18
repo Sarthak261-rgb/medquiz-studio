@@ -125,6 +125,7 @@ def _record_checkers(run: RunDir, s) -> None:
         embedding={"model": s.embedding.model},
         checks_config=s.checks.model_dump(),
         checks_config_hash=s.config_hash,
+        checks_code_version=git_sha(),
     )
 
 
