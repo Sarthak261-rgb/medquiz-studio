@@ -108,6 +108,59 @@ class OllamaClient:
                 stats.errors.append(f"invalid output: {e.errors()[0]['msg']}")
         raise LLMError(f"{model}: no valid output after {max_attempts} attempts: {stats.errors}")
 
+    def chat_text(
+        self,
+        model: str,
+        system: str,
+        user: str,
+        *,
+        temperature: float = 0.0,
+        seed: int | None = None,
+        num_ctx: int = 4096,
+        num_gpu: int | None = None,
+        num_predict: int = 80,
+        max_attempts: int = 3,
+    ) -> tuple[str, CallStats]:
+        """One line of plain text. For short answers this is safer than a JSON schema:
+        inside a JSON string the grammar never lets the model stop, and qwen2.5 was seen
+        running on into an invented next chat turn until the context filled up."""
+        stats = CallStats(model=model)
+        for attempt in range(max_attempts):
+            stats.attempts += 1
+            body = {
+                "model": model,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "stream": False,
+                "keep_alive": "15m",
+                "options": {
+                    "temperature": temperature,
+                    "num_ctx": num_ctx,
+                    "num_predict": num_predict,
+                    "stop": ["\n"],
+                    **({"num_gpu": num_gpu} if num_gpu is not None else {}),
+                    **({"seed": seed + attempt} if seed is not None else {}),
+                },
+            }
+            t0 = time.perf_counter()
+            try:
+                resp = self.http.post("/api/chat", json=body)
+            except httpx.TransportError as e:
+                stats.seconds += time.perf_counter() - t0
+                stats.errors.append(f"{type(e).__name__}: {e}")
+                continue
+            stats.seconds += time.perf_counter() - t0
+            if resp.status_code != 200:
+                stats.errors.append(f"http {resp.status_code}: {resp.text[:200]}")
+                continue
+            data = resp.json()
+            stats.prompt_tokens += data.get("prompt_eval_count", 0)
+            stats.completion_tokens += data.get("eval_count", 0)
+            text = data.get("message", {}).get("content", "").strip().strip('"').strip()
+            if text and data.get("done_reason") != "length":
+                return text, stats
+            stats.errors.append(f"unusable output ({data.get('done_reason')}): {text[:80]!r}")
+        raise LLMError(f"{model}: no usable text after {max_attempts} attempts: {stats.errors}")
+
     def digest(self, model: str) -> str:
         """Content digest of the local model, so a run records exactly which weights it used."""
         resp = self.http.get("/api/tags")

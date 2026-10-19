@@ -15,8 +15,6 @@ from __future__ import annotations
 import random
 import re
 
-from pydantic import BaseModel
-
 from .config import GeneratorCfg
 from .index import ChunkIndex, Embedder
 from .llm import JSONChat, LLMError
@@ -62,10 +60,6 @@ ABSURD = [
     "Gothic cathedral flying buttresses",
     "the rules of chess castling",
 ]
-
-
-class Paraphrase(BaseModel):
-    rewritten: str
 
 
 def _replace_key(statement: str, old: str, new: str) -> str:
@@ -132,14 +126,14 @@ def make_mutants(
         system, user, _ = render("paraphrase_v1", stem=q.stem, option=q.answer)
         slot = rng.choice([i for i in range(4) if i != q.answer_index])
         try:
-            para, _ = llm.chat_json(
-                gen_cfg.model, system, user, Paraphrase, temperature=0.3, seed=gen_cfg.seed, num_gpu=gen_cfg.num_gpu
+            para, _ = llm.chat_text(
+                gen_cfg.model, system, user, temperature=0.3, seed=gen_cfg.seed, num_gpu=gen_cfg.num_gpu, num_predict=80
             )
         except LLMError:
             para = None  # this parent just gets one mutant fewer; the report counts n per mutation
         if para is not None:
             opts = list(q.options)
-            opts[slot] = para.rewritten.strip()
+            opts[slot] = para
             out.append(_child(q, "second_correct", run_id, options=opts))
 
         # absurd_distractors
