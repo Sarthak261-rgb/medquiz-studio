@@ -27,6 +27,7 @@ def images_summary(settings: Settings) -> dict | None:
         return None
     meta = json.loads((run / "run.json").read_text(encoding="utf-8")) if (run / "run.json").exists() else {}
     checks = {r["id"]: r for r in read_jsonl(run / "image_checks.jsonl")}
+    blind = {r["id"]: r for r in read_jsonl(run / "image_checks_blind.jsonl") if r.get("auto") != "error"}
     log_dir = settings.path("data") / "reviews"
     all_reviews = latest_image_reviews(log_dir)
     by_reviewer = Counter(r["reviewer"] for r in all_reviews.values())
@@ -59,6 +60,20 @@ def images_summary(settings: Settings) -> dict | None:
                 "textbook_style": rate(sum(c["vlm"]["looks_like_textbook_illustration"] for c in chk), len(chk)),
             },
             "auto_reject": rate(sum(c["auto"] == "fail" for c in chk), len(chk)),
+            "blind": {
+                "auto_reject": rate(
+                    sum(blind[i]["auto"] == "fail" for i in ids if i in blind), sum(1 for i in ids if i in blind)
+                ),
+                "not_subject": rate(
+                    sum(not blind[i]["on_subject"] for i in ids if i in blind), sum(1 for i in ids if i in blind)
+                ),
+                "garbled_labels": rate(
+                    sum(blind[i]["garbled_labels"] for i in ids if i in blind), sum(1 for i in ids if i in blind)
+                ),
+                "has_labels": rate(
+                    sum(blind[i]["n_label_words"] > 0 for i in ids if i in blind), sum(1 for i in ids if i in blind)
+                ),
+            },
             "human": {
                 "n_reviewed": len(rev),
                 "rejection": rate(len(rejected), len(rev)),
@@ -77,6 +92,10 @@ def images_summary(settings: Settings) -> dict | None:
                  if i in checks and i in reviews]  # fmt: skip
         if pairs:
             out["vlm_vs_human"] = confusion([p for p, _ in pairs], [h for _, h in pairs])
+        pairs = [(blind[i]["auto"] == "fail", reviews[i]["decision"] == "reject") for i in ids
+                 if i in blind and i in reviews]  # fmt: skip
+        if pairs:
+            out["blind_vs_human"] = confusion([p for p, _ in pairs], [h for _, h in pairs])
         notes = [{"id": r["image_id"], "note": r["note"]} for r in rev if r.get("note")]
         out["doctor_notes"] = notes[:20]
         arms[arm] = out

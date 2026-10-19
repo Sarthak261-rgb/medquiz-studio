@@ -378,10 +378,13 @@ def to_markdown(m: dict) -> str:
 
         row("Images", lambda x: str(x["n"]))
         row("Human-rejected", lambda x: pct(x["human"]["rejection"]) if x["human"]["n_reviewed"] else "not reviewed")
-        row("VLM auto-rejected", lambda x: pct(x["auto_reject"], ci=False))
-        row("VLM: shows the subject", lambda x: pct(x["vlm"]["shows_subject"], ci=False))
-        row("VLM: garbled text", lambda x: pct(x["vlm"]["garbled_text"], ci=False))
-        row("VLM: textbook style", lambda x: pct(x["vlm"]["textbook_style"], ci=False))
+        row("VLM told the subject: auto-rejected", lambda x: pct(x["auto_reject"], ci=False))
+        row("VLM told the subject: says it shows it", lambda x: pct(x["vlm"]["shows_subject"], ci=False))
+        row("VLM told the subject: garbled text", lambda x: pct(x["vlm"]["garbled_text"], ci=False))
+        row("VLM blind: auto-rejected", lambda x: pct(x["blind"]["auto_reject"], ci=False))
+        row("VLM blind: names another structure", lambda x: pct(x["blind"]["not_subject"], ci=False))
+        row("VLM blind: image has labels", lambda x: pct(x["blind"]["has_labels"], ci=False))
+        row("VLM blind: labels not textbook terms", lambda x: pct(x["blind"]["garbled_labels"], ci=False))
         row("CLIP score (mean)", lambda x: num(x["clip_score"]))
         row("Seconds per image", lambda x: num(x["seconds_per_image"], 1))
         row("GPU Wh per image", lambda x: num(x["gpu_wh_per_image"], 4))
@@ -397,12 +400,13 @@ def to_markdown(m: dict) -> str:
                     + "; ".join(f"{IMAGE_FAILURES.get(k, k).lower()} {pct(v, ci=False)}" for k, v in pr.items())
                     + ".\n"
                 )
-            vh = A[a].get("vlm_vs_human")
-            if vh:
-                add(
-                    f"VLM verdict vs human for {arm_label[a]}: accuracy {num(vh['accuracy'])}, "
-                    f"precision {num(vh['precision'])}, recall {num(vh['recall'])}, kappa {num(vh['kappa'])} (n={vh['n']}).\n"
-                )
+            for key, name in (("vlm_vs_human", "VLM told the subject"), ("blind_vs_human", "Blind VLM")):
+                vh = A[a].get(key)
+                if vh:
+                    add(
+                        f"{name} vs human for {arm_label[a]}: accuracy {num(vh['accuracy'])}, "
+                        f"precision {num(vh['precision'])}, recall {num(vh['recall'])}, kappa {num(vh['kappa'])} (n={vh['n']}).\n"
+                    )
         lo = im["lora"]
         if lo.get("steps"):
             add(

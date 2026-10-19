@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 def without_banner(image_path: Path) -> str:
@@ -113,7 +113,7 @@ class ClipScorer:
 class BlindOut(BaseModel):
     description: str
     main_structure: str
-    labels: list[str]
+    labels: list[str] = Field(max_length=25)
 
 
 BLIND_SYSTEM = (
@@ -154,17 +154,26 @@ def vlm_blind(client: httpx.Client, model: str, image_path: Path) -> tuple[dict,
         "format": BlindOut.model_json_schema(),
         "stream": False,
         "keep_alive": "15m",
-        "options": {"temperature": 0, "seed": 3, "num_ctx": 4096, "num_predict": 500},
+        "options": {"temperature": 0, "seed": 3, "num_ctx": 4096, "num_predict": 600},
     }
     t0 = time.perf_counter()
-    resp = client.post("/api/chat", json=body, timeout=300)
-    resp.raise_for_status()
-    data = resp.json()
-    out = BlindOut.model_validate_json(data["message"]["content"])
-    return out.model_dump(), {
-        "seconds": round(time.perf_counter() - t0, 3),
-        "tokens": data.get("prompt_eval_count", 0) + data.get("eval_count", 0),
-    }
+    tokens, errors = 0, []
+    # the 3B model sometimes loops on one label ("Trachea", "Trachea", ...) until the
+    # token cap cuts the JSON off; a different seed and a little temperature get it out
+    for attempt in range(3):
+        body["options"].update(seed=3 + attempt, temperature=0.2 * attempt)
+        resp = client.post("/api/chat", json=body, timeout=300)
+        resp.raise_for_status()
+        data = resp.json()
+        tokens += data.get("prompt_eval_count", 0) + data.get("eval_count", 0)
+        try:
+            out = BlindOut.model_validate_json(data["message"]["content"])
+        except ValueError as e:
+            errors.append(str(e)[:120])
+            continue
+        return out.model_dump(), {"seconds": round(time.perf_counter() - t0, 3), "tokens": tokens,
+                                  "attempts": attempt + 1}  # fmt: skip
+    return {"error": errors[-1]}, {"seconds": round(time.perf_counter() - t0, 3), "tokens": tokens, "attempts": 3}
 
 
 def label_words(labels: list[str]) -> list[str]:
@@ -176,6 +185,8 @@ def label_words(labels: list[str]) -> list[str]:
 def blind_verdict(blind: dict, subject_id: str, vocabulary: set[str]) -> dict:
     """Deterministic tests on the blind answer: is the named structure the target organ,
     and are the label words real terms (they must occur somewhere in the textbook text)?"""
+    if "error" in blind:
+        return {"auto": "error", "auto_reasons": [], "error": blind["error"]}
     text = f"{blind['main_structure']} {blind['description']}".lower()
     on_subject = any(t in text for t in SUBJECT_TERMS.get(subject_id, []))
     words = label_words(blind["labels"])
