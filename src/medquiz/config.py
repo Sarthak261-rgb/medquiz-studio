@@ -77,6 +77,30 @@ class ChecksCfg(BaseModel):
     soft: list[str]
 
 
+class LoraCfg(BaseModel):
+    rank: int = 8
+    alpha: int = 8
+    learning_rate: float = 1e-4
+    steps: int = 1200
+    seed: int = 5
+
+
+class ImagesCfg(BaseModel):
+    chapters: list[Chapter]
+    exclude_caption_patterns: list[str] = []
+    exclude_alt_patterns: list[str] = []
+    base_model: str
+    resolution: int = 512
+    steps: int = 25
+    guidance: float = 7.0
+    seeds: list[int]
+    trigger: str
+    lora: LoraCfg
+    stamp: str
+    vlm: str
+    clip_model: str
+
+
 class PathsCfg(BaseModel):
     data: str = "data"
     runs: str = "runs"
@@ -101,6 +125,7 @@ class Settings(BaseModel):
     ollama_url: str
     paths: PathsCfg
     cost: CostCfg
+    images: ImagesCfg | None = None
     primary_run: str | None = None
     config_hash: str = ""
 

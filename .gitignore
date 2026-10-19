@@ -15,3 +15,4 @@ data/*.db-journal
 data/index/
 .streamlit/secrets.toml
 logs/
+data/figures/img/

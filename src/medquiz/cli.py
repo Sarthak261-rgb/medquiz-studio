@@ -240,6 +240,111 @@ def stress(
     )
 
 
+img_app = typer.Typer(help="Image track: figures, Stable Diffusion + LoRA, image checks")
+app.add_typer(img_app, name="images")
+IMAGES_RUN = "images-v1"
+
+
+def _img_run(s) -> RunDir:
+    return RunDir(s.path("runs"), IMAGES_RUN)
+
+
+def _figures(s):
+    from .images.figures import Figure
+    from .runs import read_jsonl
+
+    rows = read_jsonl(s.path("data") / "figures" / "figures.jsonl")
+    if not rows:
+        raise typer.BadParameter("no figures yet; run `medquiz images figures` first")
+    return [Figure(**r) for r in rows]
+
+
+def _free_gpu(s) -> None:
+    from .llm import OllamaClient
+
+    client = OllamaClient(s.ollama_url)
+    for model in {s.generator.model, s.judge.model, s.self_judge.model, s.images.vlm}:
+        client.unload(model)
+
+
+@img_app.command("figures")
+def images_figures():
+    """Download the OpenStax figures for the image chapters and pad them to 512 px."""
+    from .images.figures import ingest_figures
+
+    s = _settings()
+    out = s.path("data") / "figures"
+    kept, dropped = ingest_figures(s.source, s.images, s.path("data") / "raw", out)
+    write_jsonl(out / "figures.jsonl", [f.model_dump() for f in kept])
+    write_jsonl(out / "excluded.jsonl", dropped)
+    typer.echo(f"{len(kept)} figures kept, {len(dropped)} excluded -> {out}")
+
+
+@img_app.command("generate")
+def images_generate(arm: str = typer.Option(..., help="base or lora")):
+    """Generate the prompt x seed grid for one arm. Resumable."""
+    from .images.generate import generate_arm
+
+    s = _settings()
+    run = _img_run(s)
+    lora_dir = run.path / "lora" if arm == "lora" else None
+    if lora_dir is not None and not (lora_dir / "pytorch_lora_weights.safetensors").exists():
+        raise typer.BadParameter("train the LoRA first: `medquiz images train`")
+    run.update_meta(kind="images", code_version=git_sha(), config_hash=s.config_hash, images=s.images.model_dump())
+    _free_gpu(s)
+    n = generate_arm(s.images, run, arm, lora_dir, progress=typer.echo)
+    typer.echo(f"{arm}: {n} new images in {run.path / 'images'}")
+
+
+@img_app.command("train")
+def images_train():
+    """LoRA fine-tune of SD 1.5 on the OpenStax figures."""
+    from .images.lora import train_lora
+
+    s = _settings()
+    run = _img_run(s)
+    out = run.path / "lora"
+    if (out / "pytorch_lora_weights.safetensors").exists():
+        typer.echo("LoRA already trained; delete runs/images-v1/lora to retrain")
+        return
+    _free_gpu(s)
+    meta = train_lora(s.images, _figures(s), s.path("data") / "figures", run, out, progress=typer.echo)
+    run.update_meta(lora=meta, code_version=git_sha())
+    typer.echo(f"LoRA saved to {out}")
+
+
+@img_app.command("check")
+def images_check():
+    """CLIP score and a vision-language model check for every image. Resumable."""
+    import httpx
+
+    from .energy import StageTracker
+    from .images.checks import ClipScorer, auto_verdict, vlm_check
+
+    s = _settings()
+    run = _img_run(s)
+    images = run.read("images.jsonl")
+    done = {r["id"] for r in run.read("image_checks.jsonl")}
+    todo = [r for r in images if r["id"] not in done]
+    if not todo:
+        typer.echo("nothing to do")
+        return
+    _free_gpu(s)
+    clip = ClipScorer(s.images.clip_model)
+    scores = {r["id"]: clip.score(run.path / r["file"], r["subject"]) for r in todo}
+    clip.close()
+    client = httpx.Client(base_url=s.ollama_url)
+    with StageTracker(run, "check_images") as tracker:
+        for n, r in enumerate(todo, 1):
+            vlm, st = vlm_check(client, s.images.vlm, run.path / r["file"], r["subject"])
+            verdict, reasons = auto_verdict(vlm)
+            run.append("image_checks.jsonl", {"id": r["id"], "clip_score": scores[r["id"]], "vlm": vlm,
+                                              "auto": verdict, "auto_reasons": reasons, **st})  # fmt: skip
+            tracker.tick()
+            typer.echo(f"  [{n}/{len(todo)}] {r['id']} clip={scores[r['id']]} {verdict} {reasons}")
+    run.update_meta(image_checks={"vlm": s.images.vlm, "clip": s.images.clip_model})
+
+
 db_app = typer.Typer(help="Database maintenance")
 app.add_typer(db_app, name="db")
 

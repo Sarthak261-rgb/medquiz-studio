@@ -91,6 +91,37 @@ checks:
     - nli_distractors_not_entailed
     - judge_stem_clear
 
+images:
+  # Figures from these chapters train the LoRA (heart, vessels, lungs).
+  chapters:
+    - number: 19
+      title: "The Cardiovascular System: The Heart"
+    - number: 20
+      title: "The Cardiovascular System: Blood Vessels and Circulation"
+    - number: 22
+      title: "The Respiratory System"
+  # Photos and micrographs credited to third parties can carry other rights; only
+  # OpenStax's own drawn illustrations are used.
+  exclude_caption_patterns: ["©", "credit:", "micrograph", "Micrograph", "photo", "Photo", "LM ×", "EM ×"]
+  # Charts, tables, graphs and photos would teach the LoRA boxes and fake text; only
+  # anatomical drawings are kept. Matched case-insensitively against title and alt text.
+  exclude_alt_patterns: [flowchart, flow chart, chart, table, graph, photo, canister, ECG, electrocardiogram, millivolts, lists the]
+  base_model: stable-diffusion-v1-5/stable-diffusion-v1-5
+  resolution: 512
+  steps: 25
+  guidance: 7.0
+  seeds: [11, 22, 33, 44]
+  trigger: "osxillus"
+  lora:
+    rank: 8
+    alpha: 8
+    learning_rate: 0.0001
+    steps: 1200
+    seed: 5
+  stamp: "SYNTHETIC EDUCATIONAL IMAGE - NOT A REAL PATIENT"
+  vlm: qwen2.5vl:3b
+  clip_model: laion/CLIP-ViT-B-32-laion2B-s34B-b79K   # ships safetensors; torch 2.5 cannot load .bin
+
 ollama_url: http://localhost:11434
 
 # The generation run that the report and the release are about.

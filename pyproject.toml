@@ -31,6 +31,13 @@ ml = [
     "faiss-cpu>=1.8",
     "nvidia-ml-py>=12.0",
 ]
+# image track: Stable Diffusion 1.5, LoRA fine-tuning, CLIP scoring
+images = [
+    "diffusers>=0.30",
+    "accelerate>=0.33",
+    "peft>=0.12",
+    "pillow>=10.0",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.6",
