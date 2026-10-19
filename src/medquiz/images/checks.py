@@ -45,8 +45,8 @@ class VLMOut(BaseModel):
 
 VLM_SYSTEM = (
     "You inspect generated medical teaching images. Describe what you actually see, not what the image was "
-    "meant to show. Be strict: an image only shows the subject if a student could recognise it. Ignore the "
-    "dark banner at the bottom that says the image is synthetic. Reply with JSON only."
+    "meant to show. Be strict: an image only shows the subject if a student could recognise it. "
+    "Reply with JSON only."
 )
 
 
@@ -56,7 +56,7 @@ def vlm_check(client: httpx.Client, model: str, image_path: Path, subject: str) 
         "description: one or two sentences on what is in the image.\n"
         "shows_subject: true only if the subject is clearly recognisable.\n"
         "anatomy_problems: anything anatomically wrong, missing or extra, or 'none'.\n"
-        "contains_text: true if there are letters or labels (not counting the bottom banner).\n"
+        "contains_text: true if there are letters or labels.\n"
         "text_is_readable: true if all such text is real, readable words; true if there is no text.\n"
         "looks_like_textbook_illustration: true if it looks like a clean diagram from a textbook."
     )
