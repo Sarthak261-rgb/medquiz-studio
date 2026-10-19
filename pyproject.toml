@@ -19,6 +19,7 @@ dependencies = [
     "numpy>=1.26",
     "pandas>=2.2",
     "matplotlib>=3.9",
+    "pillow>=10.0",
 ]
 
 [project.optional-dependencies]

@@ -19,7 +19,10 @@ import streamlit as st
 from pydantic import ValidationError
 
 from medquiz.config import get_settings
+from medquiz.images import IMAGE_FAILURES
+from medquiz.images.review import ImageReviewIn, add_image_review, latest_image_reviews, queue
 from medquiz.report import compute
+from medquiz.runs import read_jsonl
 from medquiz.schemas import FAILURE_LABELS, LETTERS, FailureType, ReviewIn
 from medquiz.store import Store
 
@@ -94,7 +97,7 @@ with st.sidebar:
     st.header("MedQuiz review")
     reviewer = st.text_input("Reviewer", value=os.environ.get("MEDQUIZ_REVIEWER", ""), max_chars=64).strip()
     run_id = st.selectbox("Run", [r["id"] for r in runs]) if runs else None
-    page = st.radio("Page", ["Review queue", "Browse", "Metrics"], label_visibility="collapsed")
+    page = st.radio("Page", ["Review queue", "Image review", "Browse", "Metrics"], label_visibility="collapsed")
     # off by default: seeing the judge's verdicts as you go slowly trains you to agree with it
     reveal = st.checkbox("Show checks after each decision", value=False)
     if reviewer and run_id:
@@ -217,6 +220,64 @@ elif page == "Browse":
                 st.write(f"{r['reviewer']}: {r['decision']} {r['reasons']} {r['note']}")
         with right:
             show_source(q)
+
+# --------------------------------------------------------- image review page
+
+elif page == "Image review":
+    img_run = s.path("runs") / "images-v1"
+    images = read_jsonl(img_run / "images.jsonl")
+    log_dir = s.path("data") / "reviews"
+    if not images:
+        st.info("No generated images yet. Run `bash scripts/run_images.sh`.")
+        st.stop()
+    if not reviewer:
+        st.info("Type your name in the sidebar to start.")
+        st.stop()
+    mine = latest_image_reviews(log_dir, reviewer)
+    st.progress(len(mine) / len(images), text=f"{len(mine)} of {len(images)} images reviewed")
+    todo = queue(images, set(mine))
+    if not todo:
+        st.success("Every image has your review.")
+        st.stop()
+    img = todo[0]
+    shown = st.session_state.setdefault("img_shown_at", {})
+    shown.setdefault(img["id"], time.time())
+    left, right = st.columns([1.2, 1])
+    with left:
+        # which arm (base or LoRA) made it is deliberately not shown
+        st.image(str(img_run / img["file"]), use_container_width=True)
+    with right:
+        st.subheader("Should show", anchor=False)
+        st.write(img["subject"])
+        st.caption(
+            "Reject if a student could learn something wrong from it, or could not tell what it shows. "
+            "Judge the drawing, not the SYNTHETIC banner."
+        )
+        with st.form(key=f"img-{img['id']}"):
+            decision = st.radio("Decision", ["accept", "reject"], horizontal=True, index=None)
+            reasons = st.multiselect(
+                "Reasons (first one counts as primary)", list(IMAGE_FAILURES), format_func=IMAGE_FAILURES.get
+            )
+            note = st.text_input("What would a doctor correct? (optional)")
+            ok = st.form_submit_button("Submit and next", type="primary")
+        if ok:
+            try:
+                if decision is None:
+                    raise ValueError("Pick accept or reject.")
+                review = ImageReviewIn(
+                    reviewer=reviewer,
+                    decision=decision,
+                    reasons=reasons if decision == "reject" else [],
+                    note=note,
+                    seconds=time.time() - shown.get(img["id"], time.time()),
+                )
+            except ValidationError as e:
+                st.error(e.errors()[0]["msg"].removeprefix("Value error, "))
+            except ValueError as e:
+                st.error(str(e))
+            else:
+                add_image_review(log_dir, img["id"], review)
+                st.rerun()
 
 # ------------------------------------------------------------- metrics page
 

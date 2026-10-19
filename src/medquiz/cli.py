@@ -392,7 +392,7 @@ def report(
     except ImportError:
         make_figures = None
     if make_figures:
-        for f in make_figures(m, s.path("reports") / "figures"):
+        for f in make_figures(m, s.path("reports") / "figures", settings=s):
             typer.echo(f"figure: {f}")
     typer.echo(f"wrote {jp} and {mp}")
 

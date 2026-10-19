@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .config import Settings
+from .images.metrics import images_summary
 from .metrics import (
     ablation,
     agreement,
@@ -112,6 +113,7 @@ def compute(snap: dict, settings: Settings, gen_run: str | None = None, reviewer
         "stress_test": stress_test(mutants, {q["id"]: q for q in generated}, checks, settings) if mutants else None,
         "cost": cost(snap, gen_run, settings, accepted or None, auto["status"].get("pass", 0)) if gen_run else None,
         "runs": runs_overview(snap, settings),
+        "images": images_summary(settings),
     }
 
 
@@ -354,6 +356,62 @@ def to_markdown(m: dict) -> str:
         f"\nKey position as generated: {lv['key_position_before_shuffle']}. "
         f"After the seeded shuffle: {lv['key_position_after_shuffle']}.\n"
     )
+
+    im = m.get("images")
+    if im and im.get("arms"):
+        A = im["arms"]
+        arms = [a for a in ("base", "lora") if a in A]
+        arm_label = {"base": "SD 1.5", "lora": "SD 1.5 + OpenStax LoRA"}
+        add("## Images\n")
+        add(
+            f"{im['subjects']} subjects x {len(im['seeds'])} seeds per arm, same prompts and seeds for both arms. "
+            f"The LoRA was trained on {im['figures_used']} OpenStax anatomical drawings "
+            f"({im['figures_excluded']} figures excluded: third-party credits, photos, charts, tables). "
+            "Every image carries a visible SYNTHETIC banner and EXIF metadata.\n"
+        )
+        if im.get("reviewer"):
+            add(f"Reviewed blind by `{im['reviewer']}`: the review screen never shows which arm made an image.\n")
+        add("| | " + " | ".join(arm_label[a] for a in arms) + " |\n|---|" + "---|" * len(arms))
+
+        def row(name, fn):
+            add(f"| {name} | " + " | ".join(fn(A[a]) for a in arms) + " |")
+
+        row("Images", lambda x: str(x["n"]))
+        row("Human-rejected", lambda x: pct(x["human"]["rejection"]) if x["human"]["n_reviewed"] else "not reviewed")
+        row("VLM auto-rejected", lambda x: pct(x["auto_reject"], ci=False))
+        row("VLM: shows the subject", lambda x: pct(x["vlm"]["shows_subject"], ci=False))
+        row("VLM: garbled text", lambda x: pct(x["vlm"]["garbled_text"], ci=False))
+        row("VLM: textbook style", lambda x: pct(x["vlm"]["textbook_style"], ci=False))
+        row("CLIP score (mean)", lambda x: num(x["clip_score"]))
+        row("Seconds per image", lambda x: num(x["seconds_per_image"], 1))
+        row("GPU Wh per image", lambda x: num(x["gpu_wh_per_image"], 4))
+        row("GPU Wh per accepted image", lambda x: num(x["gpu_wh_per_accepted"], 4))
+        add("")
+        for a in arms:
+            pr = A[a]["human"]["primary_reason"]
+            if pr:
+                from .images import IMAGE_FAILURES
+
+                add(
+                    f"Why {arm_label[a]} images were rejected (primary reason, share of reviewed): "
+                    + "; ".join(f"{IMAGE_FAILURES.get(k, k).lower()} {pct(v, ci=False)}" for k, v in pr.items())
+                    + ".\n"
+                )
+            vh = A[a].get("vlm_vs_human")
+            if vh:
+                add(
+                    f"VLM verdict vs human for {arm_label[a]}: accuracy {num(vh['accuracy'])}, "
+                    f"precision {num(vh['precision'])}, recall {num(vh['recall'])}, kappa {num(vh['kappa'])} (n={vh['n']}).\n"
+                )
+        lo = im["lora"]
+        if lo.get("steps"):
+            add(
+                f"LoRA: rank {lo['rank']}, {lo['trainable_params']:,} trainable parameters, {lo['steps']} steps on "
+                f"{lo['n_figures']} figures, {num(lo['train_seconds'], 0)} s and {num(lo['train_gpu_wh'])} Wh on the "
+                f"laptop GPU, peak {lo['peak_vram_gb']} GB VRAM. Loss {lo['loss_first']} -> {lo['loss_last']} "
+                "(diffusion loss is noisy and says little about anatomy, which is why the review exists).\n"
+            )
+        add("![contact sheet](figures/images_contact_sheet.jpg)\n")
 
     c = m.get("cost")
     if c:

@@ -131,6 +131,11 @@ def judges(m: dict, out: Path) -> Path | None:
     return path
 
 
-def make_figures(m: dict, out: Path) -> list[Path]:
+def make_figures(m: dict, out: Path, settings=None) -> list[Path]:
     out.mkdir(parents=True, exist_ok=True)
-    return [p for p in (failure_breakdown(m, out), stress_test(m, out), judges(m, out)) if p]
+    paths = [failure_breakdown(m, out), stress_test(m, out), judges(m, out)]
+    if settings is not None and m.get("images"):
+        from .images.metrics import contact_sheet
+
+        paths.append(contact_sheet(settings, out / "images_contact_sheet.jpg"))
+    return [p for p in paths if p]
