@@ -1,5 +1,7 @@
 # MedQuiz Studio
 
+[![ci](https://github.com/Sarthak261-rgb/medquiz-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/Sarthak261-rgb/medquiz-studio/actions/workflows/ci.yml)
+
 Grounded multiple-choice questions and teaching images for anatomy and physiology, generated from an open textbook on a laptop GPU, checked automatically, and reviewed by a person. Every question cites the exact paragraph it came from. Every image is stamped as synthetic.
 
 The questions and images are not really the point. The point is measuring how often they are wrong, in which way, and how far the automatic checks can be trusted to catch it. Most of what I learned is in "What broke", below.
