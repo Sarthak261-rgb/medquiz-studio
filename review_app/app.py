@@ -95,7 +95,8 @@ db = store()
 runs = [r for r in db.runs() if r["kind"] == "generate"]
 with st.sidebar:
     st.header("MedQuiz review")
-    reviewer = st.text_input("Reviewer", value=os.environ.get("MEDQUIZ_REVIEWER", ""), max_chars=64).strip()
+    default_reviewer = st.query_params.get("reviewer") or os.environ.get("MEDQUIZ_REVIEWER", "")
+    reviewer = st.text_input("Reviewer", value=default_reviewer, max_chars=64).strip()
     run_id = st.selectbox("Run", [r["id"] for r in runs]) if runs else None
     page = st.radio("Page", ["Review queue", "Image review", "Browse", "Metrics"], label_visibility="collapsed")
     # off by default: seeing the judge's verdicts as you go slowly trains you to agree with it
@@ -189,6 +190,7 @@ if page == "Review queue":
 # -------------------------------------------------------------- browse page
 
 elif page == "Browse":
+    st.warning("Browse shows the automatic verdicts. Do your blind review first, or your labels lean on the judge.")
     status = st.segmented_control("Auto status", ["all", "pass", "fail", "incomplete"], default="all")
     qs = db.questions(run_id=run_id, auto_status=None if status in (None, "all") else status, limit=10_000)
     reviews = db.latest_reviews(reviewer or None)

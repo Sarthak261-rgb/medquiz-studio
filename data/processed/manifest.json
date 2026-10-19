@@ -2,7 +2,7 @@
   "source_repo": "openstax/osbooks-anatomy-physiology",
   "source_commit": "5ae32b3f4bc24ed003e91dc38bf47dba80751044",
   "license": "CC BY-NC-SA 4.0",
-  "created_at": "2026-10-18T11:11:51Z",
+  "created_at": "2026-10-19T05:55:37Z",
   "chunking": {
     "target_words": 220,
     "max_words": 320,
