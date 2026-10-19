@@ -1,0 +1,89 @@
+{
+  "id": "stress-v1",
+  "created_at": "2026-10-19T05:56:52Z",
+  "kind": "stress",
+  "from_run": "gen-v1",
+  "n_parents": 23,
+  "seed": 13,
+  "code_version": "ad946ce6e6df",
+  "config_hash": "c106459f6fb5",
+  "judge": {
+    "model": "llama3.1:8b-instruct-q4_K_M",
+    "temperature": 0.0,
+    "seed": 11,
+    "num_ctx": 4096,
+    "num_gpu": 99,
+    "digest": "46e0c10c039e"
+  },
+  "self_judge": {
+    "model": "qwen2.5:7b-instruct-q4_K_M",
+    "temperature": 0.0,
+    "seed": 11,
+    "num_ctx": 4096,
+    "num_gpu": 99,
+    "digest": "845dbda0ea48"
+  },
+  "nli": {
+    "model": "cross-encoder/nli-deberta-v3-base",
+    "entail_threshold": 0.5
+  },
+  "embedding": {
+    "model": "BAAI/bge-small-en-v1.5"
+  },
+  "checks_config": {
+    "quote_match_threshold": 75.0,
+    "duplicate_cosine": 0.92,
+    "retrieval_top_k": 3,
+    "length_cue_ratio": 1.6,
+    "hard": [
+      "options_distinct",
+      "no_all_none_of_above",
+      "stem_leak",
+      "evidence_in_source",
+      "duplicate",
+      "judge_blind_solve",
+      "judge_answer_grounded",
+      "judge_single_correct",
+      "judge_distractor_quality"
+    ],
+    "soft": [
+      "text_reference",
+      "negative_stem",
+      "absolute_terms",
+      "length_cue",
+      "statement_consistent",
+      "numeric_grounding",
+      "key_terms_in_source",
+      "citation_retrieval",
+      "book_overlap",
+      "nli_answer_entailed",
+      "nli_distractors_not_entailed",
+      "judge_stem_clear"
+    ]
+  },
+  "checks_config_hash": "c106459f6fb5",
+  "checks_code_version": "ad946ce6e6df",
+  "stages": {
+    "check_rules": {
+      "n": 138,
+      "seconds": 0.6,
+      "gpu_joules": 204.5,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T05:56:55Z"
+    },
+    "check_nli": {
+      "n": 138,
+      "seconds": 69.2,
+      "gpu_joules": 3102.8,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T05:58:05Z"
+    },
+    "check_judge": {
+      "n": 138,
+      "seconds": 1422.5,
+      "gpu_joules": 70328.2,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T06:21:47Z"
+    }
+  }
+}

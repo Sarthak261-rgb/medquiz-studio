@@ -4,8 +4,6 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .env
-.claude/
-CLAUDE.md
 
 # raw CNXML is re-downloadable from the pinned commit
 data/raw/

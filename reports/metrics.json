@@ -1,0 +1,1492 @@
+{
+  "data_fingerprint": "a8be3c5ed22b01d3",
+  "gen_run": "gen-v1",
+  "reviewer": null,
+  "setup": {
+    "generator": {
+      "model": "qwen2.5:7b-instruct-q4_K_M",
+      "prompt": "generate_v1",
+      "temperature": 0.7,
+      "seed": 7,
+      "num_ctx": 4096,
+      "num_gpu": 99,
+      "questions_per_chunk": 1,
+      "digest": "845dbda0ea48"
+    },
+    "judge": {
+      "model": "llama3.1:8b-instruct-q4_K_M",
+      "temperature": 0.0,
+      "seed": 11,
+      "num_ctx": 4096,
+      "num_gpu": 99,
+      "digest": "46e0c10c039e"
+    },
+    "nli_model": "cross-encoder/nli-deberta-v3-base",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "source": "openstax/osbooks-anatomy-physiology@5ae32b3f4bc2",
+    "n_chunks": 151,
+    "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU"
+  },
+  "auto": {
+    "n": 151,
+    "status": {
+      "fail": 128,
+      "pass": 23
+    },
+    "auto_reject": {
+      "k": 128,
+      "n": 151,
+      "rate": 0.8477,
+      "ci95": [
+        0.7818,
+        0.8963
+      ]
+    },
+    "primary_failure": {
+      "weak_distractors": {
+        "k": 106,
+        "n": 151,
+        "rate": 0.702,
+        "ci95": [
+          0.6248,
+          0.7692
+        ]
+      },
+      "wrong_key": {
+        "k": 11,
+        "n": 151,
+        "rate": 0.0728,
+        "ci95": [
+          0.0412,
+          0.1257
+        ]
+      },
+      "multiple_correct": {
+        "k": 7,
+        "n": 151,
+        "rate": 0.0464,
+        "ci95": [
+          0.0226,
+          0.0926
+        ]
+      },
+      "unsupported_answer": {
+        "k": 4,
+        "n": 151,
+        "rate": 0.0265,
+        "ci95": [
+          0.0103,
+          0.0661
+        ]
+      }
+    },
+    "any_failure": {
+      "weak_distractors": {
+        "k": 119,
+        "n": 151,
+        "rate": 0.7881,
+        "ci95": [
+          0.7162,
+          0.8457
+        ]
+      },
+      "wrong_key": {
+        "k": 14,
+        "n": 151,
+        "rate": 0.0927,
+        "ci95": [
+          0.056,
+          0.1496
+        ]
+      },
+      "multiple_correct": {
+        "k": 13,
+        "n": 151,
+        "rate": 0.0861,
+        "ci95": [
+          0.051,
+          0.1417
+        ]
+      },
+      "unsupported_answer": {
+        "k": 4,
+        "n": 151,
+        "rate": 0.0265,
+        "ci95": [
+          0.0103,
+          0.0661
+        ]
+      },
+      "item_writing_flaw": {
+        "k": 1,
+        "n": 151,
+        "rate": 0.0066,
+        "ci95": [
+          0.0012,
+          0.0366
+        ]
+      }
+    },
+    "checks": {
+      "absolute_terms": {
+        "failed": 7,
+        "applied": 151,
+        "fail_rate": 0.0464,
+        "severity": "soft"
+      },
+      "book_overlap": {
+        "failed": 2,
+        "applied": 151,
+        "fail_rate": 0.0132,
+        "severity": "soft"
+      },
+      "citation_retrieval": {
+        "failed": 13,
+        "applied": 151,
+        "fail_rate": 0.0861,
+        "severity": "soft"
+      },
+      "closed_book_solve": {
+        "failed": 37,
+        "applied": 151,
+        "fail_rate": 0.245,
+        "severity": "info"
+      },
+      "duplicate": {
+        "failed": 0,
+        "applied": 151,
+        "fail_rate": 0.0,
+        "severity": "hard"
+      },
+      "evidence_in_source": {
+        "failed": 0,
+        "applied": 151,
+        "fail_rate": 0.0,
+        "severity": "hard"
+      },
+      "judge_answer_grounded": {
+        "failed": 4,
+        "applied": 151,
+        "fail_rate": 0.0265,
+        "severity": "hard"
+      },
+      "judge_blind_solve": {
+        "failed": 14,
+        "applied": 151,
+        "fail_rate": 0.0927,
+        "severity": "hard"
+      },
+      "judge_distractor_quality": {
+        "failed": 119,
+        "applied": 151,
+        "fail_rate": 0.7881,
+        "severity": "hard"
+      },
+      "judge_single_correct": {
+        "failed": 13,
+        "applied": 151,
+        "fail_rate": 0.0861,
+        "severity": "hard"
+      },
+      "judge_stem_clear": {
+        "failed": 0,
+        "applied": 151,
+        "fail_rate": 0.0,
+        "severity": "soft"
+      },
+      "key_terms_in_source": {
+        "failed": 10,
+        "applied": 140,
+        "fail_rate": 0.0714,
+        "severity": "soft"
+      },
+      "length_cue": {
+        "failed": 5,
+        "applied": 151,
+        "fail_rate": 0.0331,
+        "severity": "soft"
+      },
+      "negative_stem": {
+        "failed": 4,
+        "applied": 151,
+        "fail_rate": 0.0265,
+        "severity": "soft"
+      },
+      "nli_answer_entailed": {
+        "failed": 58,
+        "applied": 151,
+        "fail_rate": 0.3841,
+        "severity": "soft"
+      },
+      "nli_distractors_not_entailed": {
+        "failed": 43,
+        "applied": 116,
+        "fail_rate": 0.3707,
+        "severity": "soft"
+      },
+      "no_all_none_of_above": {
+        "failed": 1,
+        "applied": 151,
+        "fail_rate": 0.0066,
+        "severity": "hard"
+      },
+      "numeric_grounding": {
+        "failed": 2,
+        "applied": 22,
+        "fail_rate": 0.0909,
+        "severity": "soft"
+      },
+      "options_distinct": {
+        "failed": 0,
+        "applied": 151,
+        "fail_rate": 0.0,
+        "severity": "hard"
+      },
+      "options_only_solve": {
+        "failed": 70,
+        "applied": 151,
+        "fail_rate": 0.4636,
+        "severity": "info"
+      },
+      "self_answer_grounded": {
+        "failed": 12,
+        "applied": 151,
+        "fail_rate": 0.0795,
+        "severity": "info"
+      },
+      "self_blind_solve": {
+        "failed": 13,
+        "applied": 151,
+        "fail_rate": 0.0861,
+        "severity": "info"
+      },
+      "self_distractor_quality": {
+        "failed": 131,
+        "applied": 151,
+        "fail_rate": 0.8675,
+        "severity": "info"
+      },
+      "self_single_correct": {
+        "failed": 18,
+        "applied": 151,
+        "fail_rate": 0.1192,
+        "severity": "info"
+      },
+      "self_stem_clear": {
+        "failed": 1,
+        "applied": 151,
+        "fail_rate": 0.0066,
+        "severity": "info"
+      },
+      "statement_consistent": {
+        "failed": 12,
+        "applied": 151,
+        "fail_rate": 0.0795,
+        "severity": "soft"
+      },
+      "stem_leak": {
+        "failed": 0,
+        "applied": 151,
+        "fail_rate": 0.0,
+        "severity": "hard"
+      },
+      "text_reference": {
+        "failed": 39,
+        "applied": 151,
+        "fail_rate": 0.2583,
+        "severity": "soft"
+      }
+    }
+  },
+  "human": {
+    "n_reviewed": 0,
+    "n_total": 151,
+    "rejection": {
+      "k": 0,
+      "n": 0,
+      "rate": null,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "primary_reason": {},
+    "any_reason": {},
+    "level": {},
+    "by_chapter": {},
+    "by_target_type": {},
+    "review_seconds_median": null,
+    "review_seconds_total": null
+  },
+  "agreement": {
+    "n": 0
+  },
+  "levels": {
+    "target_vs_judge": {
+      "recall->reasoning": 41,
+      "reasoning->reasoning": 74,
+      "recall->recall": 35,
+      "reasoning->recall": 1
+    },
+    "target_vs_human": {},
+    "generator_bloom": {
+      "remember": 77,
+      "apply": 68,
+      "understand": 6
+    },
+    "key_position_before_shuffle": {
+      "A": 50,
+      "B": 54,
+      "C": 29,
+      "D": 18
+    },
+    "key_position_after_shuffle": {
+      "A": 32,
+      "B": 37,
+      "C": 46,
+      "D": 36
+    }
+  },
+  "closed_book": {
+    "k": 114,
+    "n": 151,
+    "rate": 0.755,
+    "ci95": [
+      0.6806,
+      0.8167
+    ]
+  },
+  "options_only": {
+    "k": 81,
+    "n": 151,
+    "rate": 0.5364,
+    "ci95": [
+      0.457,
+      0.6141
+    ]
+  },
+  "judges": {
+    "judge_model": "llama3.1:8b-instruct-q4_K_M",
+    "self_model": "qwen2.5:7b-instruct-q4_K_M",
+    "per_check": {
+      "blind_solve": {
+        "judge_pass": {
+          "k": 137,
+          "n": 151,
+          "rate": 0.9073,
+          "ci95": [
+            0.8504,
+            0.944
+          ]
+        },
+        "self_pass": {
+          "k": 138,
+          "n": 151,
+          "rate": 0.9139,
+          "ci95": [
+            0.8583,
+            0.949
+          ]
+        },
+        "agreement": 0.9272,
+        "kappa": 0.5527
+      },
+      "answer_grounded": {
+        "judge_pass": {
+          "k": 147,
+          "n": 151,
+          "rate": 0.9735,
+          "ci95": [
+            0.9339,
+            0.9897
+          ]
+        },
+        "self_pass": {
+          "k": 139,
+          "n": 151,
+          "rate": 0.9205,
+          "ci95": [
+            0.8662,
+            0.954
+          ]
+        },
+        "agreement": 0.9205,
+        "kappa": 0.219
+      },
+      "single_correct": {
+        "judge_pass": {
+          "k": 138,
+          "n": 151,
+          "rate": 0.9139,
+          "ci95": [
+            0.8583,
+            0.949
+          ]
+        },
+        "self_pass": {
+          "k": 133,
+          "n": 151,
+          "rate": 0.8808,
+          "ci95": [
+            0.8194,
+            0.9233
+          ]
+        },
+        "agreement": 0.9007,
+        "kappa": 0.4624
+      },
+      "distractor_quality": {
+        "judge_pass": {
+          "k": 32,
+          "n": 151,
+          "rate": 0.2119,
+          "ci95": [
+            0.1543,
+            0.2838
+          ]
+        },
+        "self_pass": {
+          "k": 20,
+          "n": 151,
+          "rate": 0.1325,
+          "ci95": [
+            0.0874,
+            0.1957
+          ]
+        },
+        "agreement": 0.7483,
+        "kappa": 0.1269
+      },
+      "stem_clear": {
+        "judge_pass": {
+          "k": 151,
+          "n": 151,
+          "rate": 1.0,
+          "ci95": [
+            0.9752,
+            1.0
+          ]
+        },
+        "self_pass": {
+          "k": 150,
+          "n": 151,
+          "rate": 0.9934,
+          "ci95": [
+            0.9634,
+            0.9988
+          ]
+        },
+        "agreement": 0.9934,
+        "kappa": 0.0
+      }
+    },
+    "auto_reject_with_judge": {
+      "k": 128,
+      "n": 151,
+      "rate": 0.8477,
+      "ci95": [
+        0.7818,
+        0.8963
+      ]
+    },
+    "auto_reject_with_self": {
+      "k": 135,
+      "n": 151,
+      "rate": 0.894,
+      "ci95": [
+        0.8348,
+        0.9337
+      ]
+    },
+    "verdict_kappa": 0.0916
+  },
+  "ablation": [
+    {
+      "variant": "configured gate",
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      }
+    },
+    {
+      "variant": "without options_distinct",
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      }
+    },
+    {
+      "variant": "without no_all_none_of_above",
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      }
+    },
+    {
+      "variant": "without stem_leak",
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      }
+    },
+    {
+      "variant": "without evidence_in_source",
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      }
+    },
+    {
+      "variant": "without duplicate",
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      }
+    },
+    {
+      "variant": "without judge_blind_solve",
+      "auto_reject": {
+        "k": 127,
+        "n": 151,
+        "rate": 0.8411,
+        "ci95": [
+          0.7744,
+          0.8908
+        ]
+      }
+    },
+    {
+      "variant": "without judge_answer_grounded",
+      "auto_reject": {
+        "k": 127,
+        "n": 151,
+        "rate": 0.8411,
+        "ci95": [
+          0.7744,
+          0.8908
+        ]
+      }
+    },
+    {
+      "variant": "without judge_single_correct",
+      "auto_reject": {
+        "k": 125,
+        "n": 151,
+        "rate": 0.8278,
+        "ci95": [
+          0.7597,
+          0.8797
+        ]
+      }
+    },
+    {
+      "variant": "without judge_distractor_quality",
+      "auto_reject": {
+        "k": 22,
+        "n": 151,
+        "rate": 0.1457,
+        "ci95": [
+          0.0982,
+          0.2107
+        ]
+      }
+    },
+    {
+      "variant": "rules and retrieval only",
+      "auto_reject": {
+        "k": 1,
+        "n": 151,
+        "rate": 0.0066,
+        "ci95": [
+          0.0012,
+          0.0366
+        ]
+      }
+    },
+    {
+      "variant": "LLM judge only",
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      }
+    }
+  ],
+  "plausibility_by_verdict": {
+    "judge": {
+      "contradicted": {
+        "high": 27,
+        "medium": 10,
+        "low": 42
+      },
+      "not_in_passage": {
+        "low": 292,
+        "medium": 49,
+        "high": 16
+      },
+      "supported": {
+        "n/a": 2,
+        "high": 13,
+        "medium": 2
+      }
+    },
+    "self": {
+      "contradicted": {
+        "low": 68,
+        "medium": 16,
+        "high": 19
+      },
+      "not_in_passage": {
+        "low": 282,
+        "medium": 26,
+        "n/a": 19,
+        "high": 2
+      },
+      "supported": {
+        "high": 6,
+        "medium": 4,
+        "low": 10,
+        "n/a": 1
+      }
+    }
+  },
+  "book_control": {
+    "n": 57,
+    "status": {
+      "fail": 51,
+      "pass": 6
+    },
+    "auto_reject": {
+      "k": 51,
+      "n": 57,
+      "rate": 0.8947,
+      "ci95": [
+        0.7888,
+        0.9509
+      ]
+    },
+    "primary_failure": {
+      "weak_distractors": {
+        "k": 35,
+        "n": 57,
+        "rate": 0.614,
+        "ci95": [
+          0.4843,
+          0.7294
+        ]
+      },
+      "wrong_key": {
+        "k": 14,
+        "n": 57,
+        "rate": 0.2456,
+        "ci95": [
+          0.1523,
+          0.371
+        ]
+      },
+      "unsupported_answer": {
+        "k": 2,
+        "n": 57,
+        "rate": 0.0351,
+        "ci95": [
+          0.0097,
+          0.1192
+        ]
+      }
+    },
+    "any_failure": {
+      "weak_distractors": {
+        "k": 45,
+        "n": 57,
+        "rate": 0.7895,
+        "ci95": [
+          0.6671,
+          0.8753
+        ]
+      },
+      "wrong_key": {
+        "k": 14,
+        "n": 57,
+        "rate": 0.2456,
+        "ci95": [
+          0.1523,
+          0.371
+        ]
+      },
+      "multiple_correct": {
+        "k": 5,
+        "n": 57,
+        "rate": 0.0877,
+        "ci95": [
+          0.0381,
+          0.1895
+        ]
+      },
+      "item_writing_flaw": {
+        "k": 5,
+        "n": 57,
+        "rate": 0.0877,
+        "ci95": [
+          0.0381,
+          0.1895
+        ]
+      },
+      "unsupported_answer": {
+        "k": 2,
+        "n": 57,
+        "rate": 0.0351,
+        "ci95": [
+          0.0097,
+          0.1192
+        ]
+      }
+    },
+    "checks": {
+      "absolute_terms": {
+        "failed": 2,
+        "applied": 57,
+        "fail_rate": 0.0351,
+        "severity": "soft"
+      },
+      "closed_book_solve": {
+        "failed": 19,
+        "applied": 57,
+        "fail_rate": 0.3333,
+        "severity": "info"
+      },
+      "judge_answer_grounded": {
+        "failed": 2,
+        "applied": 57,
+        "fail_rate": 0.0351,
+        "severity": "hard"
+      },
+      "judge_blind_solve": {
+        "failed": 14,
+        "applied": 57,
+        "fail_rate": 0.2456,
+        "severity": "hard"
+      },
+      "judge_distractor_quality": {
+        "failed": 45,
+        "applied": 57,
+        "fail_rate": 0.7895,
+        "severity": "hard"
+      },
+      "judge_single_correct": {
+        "failed": 5,
+        "applied": 57,
+        "fail_rate": 0.0877,
+        "severity": "hard"
+      },
+      "judge_stem_clear": {
+        "failed": 0,
+        "applied": 57,
+        "fail_rate": 0.0,
+        "severity": "soft"
+      },
+      "key_terms_in_source": {
+        "failed": 9,
+        "applied": 56,
+        "fail_rate": 0.1607,
+        "severity": "soft"
+      },
+      "length_cue": {
+        "failed": 3,
+        "applied": 57,
+        "fail_rate": 0.0526,
+        "severity": "soft"
+      },
+      "negative_stem": {
+        "failed": 2,
+        "applied": 57,
+        "fail_rate": 0.0351,
+        "severity": "soft"
+      },
+      "no_all_none_of_above": {
+        "failed": 5,
+        "applied": 57,
+        "fail_rate": 0.0877,
+        "severity": "hard"
+      },
+      "numeric_grounding": {
+        "failed": 1,
+        "applied": 3,
+        "fail_rate": 0.3333,
+        "severity": "soft"
+      },
+      "options_distinct": {
+        "failed": 0,
+        "applied": 57,
+        "fail_rate": 0.0,
+        "severity": "hard"
+      },
+      "options_only_solve": {
+        "failed": 33,
+        "applied": 57,
+        "fail_rate": 0.5789,
+        "severity": "info"
+      },
+      "stem_leak": {
+        "failed": 0,
+        "applied": 57,
+        "fail_rate": 0.0,
+        "severity": "hard"
+      },
+      "text_reference": {
+        "failed": 0,
+        "applied": 57,
+        "fail_rate": 0.0,
+        "severity": "soft"
+      }
+    },
+    "blind_solve_accuracy": {
+      "k": 43,
+      "n": 57,
+      "rate": 0.7544,
+      "ci95": [
+        0.629,
+        0.8477
+      ]
+    },
+    "closed_book_accuracy": {
+      "k": 38,
+      "n": 57,
+      "rate": 0.6667,
+      "ci95": [
+        0.5372,
+        0.7751
+      ]
+    },
+    "negative_stems": {
+      "k": 1,
+      "n": 3,
+      "rate": 0.3333,
+      "ci95": [
+        0.0615,
+        0.7923
+      ]
+    }
+  },
+  "retrieval": {
+    "stem_only": {
+      "section_recall@1": 0.807,
+      "section_recall@3": 0.9298,
+      "section_recall@5": 0.9649
+    },
+    "stem_plus_answer": {
+      "section_recall@1": 0.9123,
+      "section_recall@3": 0.9649,
+      "section_recall@5": 0.9825
+    },
+    "n": 57
+  },
+  "stress_test": {
+    "swap_key": {
+      "n": 23,
+      "auto_reject": {
+        "k": 23,
+        "n": 23,
+        "rate": 1.0,
+        "ci95": [
+          0.8569,
+          1.0
+        ]
+      },
+      "caught_by": {
+        "judge_blind_solve": {
+          "k": 23,
+          "n": 23,
+          "rate": 1.0,
+          "ci95": [
+            0.8569,
+            1.0
+          ]
+        },
+        "judge_answer_grounded": {
+          "k": 4,
+          "n": 23,
+          "rate": 0.1739,
+          "ci95": [
+            0.0698,
+            0.3714
+          ]
+        },
+        "nli_answer_entailed": {
+          "k": 13,
+          "n": 21,
+          "rate": 0.619,
+          "ci95": [
+            0.4088,
+            0.7925
+          ]
+        }
+      }
+    },
+    "wrong_passage": {
+      "n": 23,
+      "auto_reject": {
+        "k": 23,
+        "n": 23,
+        "rate": 1.0,
+        "ci95": [
+          0.8569,
+          1.0
+        ]
+      },
+      "caught_by": {
+        "judge_answer_grounded": {
+          "k": 16,
+          "n": 23,
+          "rate": 0.6957,
+          "ci95": [
+            0.4913,
+            0.844
+          ]
+        },
+        "nli_answer_entailed": {
+          "k": 22,
+          "n": 23,
+          "rate": 0.9565,
+          "ci95": [
+            0.7901,
+            0.9923
+          ]
+        },
+        "evidence_in_source": {
+          "k": 23,
+          "n": 23,
+          "rate": 1.0,
+          "ci95": [
+            0.8569,
+            1.0
+          ]
+        }
+      }
+    },
+    "near_miss_passage": {
+      "n": 23,
+      "auto_reject": {
+        "k": 23,
+        "n": 23,
+        "rate": 1.0,
+        "ci95": [
+          0.8569,
+          1.0
+        ]
+      },
+      "caught_by": {
+        "judge_answer_grounded": {
+          "k": 9,
+          "n": 23,
+          "rate": 0.3913,
+          "ci95": [
+            0.2216,
+            0.5921
+          ]
+        },
+        "nli_answer_entailed": {
+          "k": 21,
+          "n": 23,
+          "rate": 0.913,
+          "ci95": [
+            0.732,
+            0.9758
+          ]
+        },
+        "evidence_in_source": {
+          "k": 23,
+          "n": 23,
+          "rate": 1.0,
+          "ci95": [
+            0.8569,
+            1.0
+          ]
+        }
+      }
+    },
+    "second_correct": {
+      "n": 23,
+      "auto_reject": {
+        "k": 15,
+        "n": 23,
+        "rate": 0.6522,
+        "ci95": [
+          0.4489,
+          0.8119
+        ]
+      },
+      "caught_by": {
+        "judge_single_correct": {
+          "k": 7,
+          "n": 23,
+          "rate": 0.3043,
+          "ci95": [
+            0.156,
+            0.5087
+          ]
+        },
+        "judge_blind_solve": {
+          "k": 6,
+          "n": 23,
+          "rate": 0.2609,
+          "ci95": [
+            0.1255,
+            0.4647
+          ]
+        },
+        "options_distinct": {
+          "k": 1,
+          "n": 23,
+          "rate": 0.0435,
+          "ci95": [
+            0.0077,
+            0.2099
+          ]
+        },
+        "nli_distractors_not_entailed": {
+          "k": 10,
+          "n": 21,
+          "rate": 0.4762,
+          "ci95": [
+            0.2834,
+            0.6763
+          ]
+        }
+      }
+    },
+    "absurd_distractors": {
+      "n": 23,
+      "auto_reject": {
+        "k": 23,
+        "n": 23,
+        "rate": 1.0,
+        "ci95": [
+          0.8569,
+          1.0
+        ]
+      },
+      "caught_by": {
+        "judge_distractor_quality": {
+          "k": 23,
+          "n": 23,
+          "rate": 1.0,
+          "ci95": [
+            0.8569,
+            1.0
+          ]
+        }
+      }
+    },
+    "reorder": {
+      "n": 23,
+      "answer_flip": {
+        "k": 0,
+        "n": 23,
+        "rate": 0.0,
+        "ci95": [
+          0.0,
+          0.1431
+        ]
+      },
+      "auto_verdict_flip": {
+        "k": 12,
+        "n": 23,
+        "rate": 0.5217,
+        "ci95": [
+          0.3296,
+          0.7076
+        ]
+      }
+    }
+  },
+  "cost": {
+    "n_generated": 151,
+    "stages": {
+      "generate": {
+        "seconds": 1077.1,
+        "gpu_wh": 17.56,
+        "n": 151
+      },
+      "check_rules": {
+        "seconds": 2.3,
+        "gpu_wh": 0.16,
+        "n": 302
+      },
+      "check_retrieval": {
+        "seconds": 54.2,
+        "gpu_wh": 0.07,
+        "n": 151
+      },
+      "check_nli": {
+        "seconds": 61.9,
+        "gpu_wh": 0.94,
+        "n": 151
+      },
+      "check_judge": {
+        "seconds": 2072.6,
+        "gpu_wh": 34.74,
+        "n": 151
+      },
+      "check_selfjudge": {
+        "seconds": 1177.4,
+        "gpu_wh": 26.04,
+        "n": 151
+      }
+    },
+    "production_stages": [
+      "check_judge",
+      "check_nli",
+      "check_retrieval",
+      "check_rules",
+      "generate"
+    ],
+    "llm_tokens": {
+      "generation": 138243,
+      "checks": 254944,
+      "diagnostic_share_of_checks": 0.221
+    },
+    "llm_seconds": {
+      "generation": 1075.2,
+      "checks": 2069.0
+    },
+    "total_wall_seconds": 3268.1,
+    "total_gpu_wh": 53.47,
+    "total_inr": 0.4278,
+    "inr_per_kwh": 8.0,
+    "per_generated": {
+      "seconds": 21.643,
+      "tokens": 2603.887,
+      "gpu_wh": 0.354
+    },
+    "per_auto_passed": {
+      "seconds": 142.091,
+      "gpu_wh": 2.325
+    },
+    "per_accepted": null
+  },
+  "runs": [
+    {
+      "run": "gen-v1",
+      "prompt": "generate_v1",
+      "n": 151,
+      "auto_reject": {
+        "k": 128,
+        "n": 151,
+        "rate": 0.8477,
+        "ci95": [
+          0.7818,
+          0.8963
+        ]
+      },
+      "primary_failure": {
+        "weak_distractors": {
+          "k": 106,
+          "n": 151,
+          "rate": 0.702,
+          "ci95": [
+            0.6248,
+            0.7692
+          ]
+        },
+        "wrong_key": {
+          "k": 11,
+          "n": 151,
+          "rate": 0.0728,
+          "ci95": [
+            0.0412,
+            0.1257
+          ]
+        },
+        "multiple_correct": {
+          "k": 7,
+          "n": 151,
+          "rate": 0.0464,
+          "ci95": [
+            0.0226,
+            0.0926
+          ]
+        }
+      },
+      "text_reference": 0.2583
+    }
+  ],
+  "images": {
+    "run": "images-v1",
+    "reviewer": null,
+    "base_model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+    "subjects": 12,
+    "seeds": [
+      11,
+      22,
+      33,
+      44
+    ],
+    "arms": {
+      "base": {
+        "n": 48,
+        "seconds_per_image": 7.39,
+        "gpu_wh_per_image": 0.1127,
+        "clip_score": 29.938,
+        "vlm": {
+          "shows_subject": {
+            "k": 48,
+            "n": 48,
+            "rate": 1.0,
+            "ci95": [
+              0.9259,
+              1.0
+            ]
+          },
+          "contains_text": {
+            "k": 1,
+            "n": 48,
+            "rate": 0.0208,
+            "ci95": [
+              0.0037,
+              0.109
+            ]
+          },
+          "garbled_text": {
+            "k": 0,
+            "n": 48,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0741
+            ]
+          },
+          "textbook_style": {
+            "k": 47,
+            "n": 48,
+            "rate": 0.9792,
+            "ci95": [
+              0.891,
+              0.9963
+            ]
+          }
+        },
+        "auto_reject": {
+          "k": 0,
+          "n": 48,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.0741
+          ]
+        },
+        "blind": {
+          "auto_reject": {
+            "k": 21,
+            "n": 48,
+            "rate": 0.4375,
+            "ci95": [
+              0.307,
+              0.5773
+            ]
+          },
+          "not_subject": {
+            "k": 20,
+            "n": 48,
+            "rate": 0.4167,
+            "ci95": [
+              0.2885,
+              0.5572
+            ]
+          },
+          "garbled_labels": {
+            "k": 3,
+            "n": 48,
+            "rate": 0.0625,
+            "ci95": [
+              0.0215,
+              0.1684
+            ]
+          },
+          "has_labels": {
+            "k": 20,
+            "n": 48,
+            "rate": 0.4167,
+            "ci95": [
+              0.2885,
+              0.5572
+            ]
+          }
+        },
+        "human": {
+          "n_reviewed": 0,
+          "rejection": {
+            "k": 0,
+            "n": 0,
+            "rate": null,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "primary_reason": {},
+          "any_reason": {}
+        },
+        "accepted": 0,
+        "gpu_wh_per_accepted": null,
+        "seconds_per_accepted": null,
+        "doctor_notes": []
+      },
+      "lora": {
+        "n": 48,
+        "seconds_per_image": 10.623,
+        "gpu_wh_per_image": 0.127,
+        "clip_score": 30.982,
+        "vlm": {
+          "shows_subject": {
+            "k": 48,
+            "n": 48,
+            "rate": 1.0,
+            "ci95": [
+              0.9259,
+              1.0
+            ]
+          },
+          "contains_text": {
+            "k": 33,
+            "n": 48,
+            "rate": 0.6875,
+            "ci95": [
+              0.5467,
+              0.8005
+            ]
+          },
+          "garbled_text": {
+            "k": 0,
+            "n": 48,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0741
+            ]
+          },
+          "textbook_style": {
+            "k": 48,
+            "n": 48,
+            "rate": 1.0,
+            "ci95": [
+              0.9259,
+              1.0
+            ]
+          }
+        },
+        "auto_reject": {
+          "k": 0,
+          "n": 48,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.0741
+          ]
+        },
+        "blind": {
+          "auto_reject": {
+            "k": 15,
+            "n": 48,
+            "rate": 0.3125,
+            "ci95": [
+              0.1995,
+              0.4533
+            ]
+          },
+          "not_subject": {
+            "k": 15,
+            "n": 48,
+            "rate": 0.3125,
+            "ci95": [
+              0.1995,
+              0.4533
+            ]
+          },
+          "garbled_labels": {
+            "k": 5,
+            "n": 48,
+            "rate": 0.1042,
+            "ci95": [
+              0.0453,
+              0.2217
+            ]
+          },
+          "has_labels": {
+            "k": 35,
+            "n": 48,
+            "rate": 0.7292,
+            "ci95": [
+              0.59,
+              0.8343
+            ]
+          }
+        },
+        "human": {
+          "n_reviewed": 0,
+          "rejection": {
+            "k": 0,
+            "n": 0,
+            "rate": null,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "primary_reason": {},
+          "any_reason": {}
+        },
+        "accepted": 0,
+        "gpu_wh_per_accepted": null,
+        "seconds_per_accepted": null,
+        "doctor_notes": []
+      }
+    },
+    "lora": {
+      "n_figures": 56,
+      "trainable_params": 1594368,
+      "rank": 8,
+      "steps": 1200,
+      "peak_vram_gb": 2.05,
+      "train_seconds": 1837.7,
+      "train_gpu_wh": 8.0,
+      "loss_first": 0.06114,
+      "loss_last": 0.07254
+    },
+    "figures_used": 56,
+    "figures_excluded": 52
+  }
+}

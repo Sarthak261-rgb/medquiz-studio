@@ -1,0 +1,125 @@
+{
+  "id": "images-v1",
+  "created_at": "2026-10-19T06:44:34Z",
+  "kind": "images",
+  "code_version": "fafbaeeea63c",
+  "config_hash": "cf35694ec95f",
+  "images": {
+    "chapters": [
+      {
+        "number": 19,
+        "title": "The Cardiovascular System: The Heart"
+      },
+      {
+        "number": 20,
+        "title": "The Cardiovascular System: Blood Vessels and Circulation"
+      },
+      {
+        "number": 22,
+        "title": "The Respiratory System"
+      }
+    ],
+    "exclude_caption_patterns": [
+      "©",
+      "credit:",
+      "micrograph",
+      "Micrograph",
+      "photo",
+      "Photo",
+      "LM ×",
+      "EM ×"
+    ],
+    "exclude_alt_patterns": [
+      "flowchart",
+      "flow chart",
+      "chart",
+      "table",
+      "graph",
+      "photo",
+      "canister",
+      "ECG",
+      "electrocardiogram",
+      "millivolts",
+      "lists the"
+    ],
+    "base_model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+    "resolution": 512,
+    "steps": 25,
+    "guidance": 7.0,
+    "seeds": [
+      11,
+      22,
+      33,
+      44
+    ],
+    "trigger": "osxillus",
+    "lora": {
+      "rank": 8,
+      "alpha": 8,
+      "learning_rate": 0.0001,
+      "steps": 1200,
+      "seed": 5
+    },
+    "stamp": "SYNTHETIC EDUCATIONAL IMAGE - NOT A REAL PATIENT",
+    "vlm": "qwen2.5vl:3b",
+    "clip_model": "laion/CLIP-ViT-B-32-laion2B-s34B-b79K"
+  },
+  "stages": {
+    "generate_base": {
+      "n": 48,
+      "seconds": 359.3,
+      "gpu_joules": 19536.4,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T06:51:40Z"
+    },
+    "train_lora": {
+      "n": 1200,
+      "seconds": 1837.7,
+      "gpu_joules": 28800.8,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T07:23:17Z"
+    },
+    "generate_lora": {
+      "n": 48,
+      "seconds": 514.6,
+      "gpu_joules": 22027.4,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T07:33:07Z"
+    },
+    "check_images": {
+      "n": 192,
+      "seconds": 436.9,
+      "gpu_joules": 30664.6,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T07:46:20Z"
+    },
+    "check_images_blind": {
+      "n": 105,
+      "seconds": 299.0,
+      "gpu_joules": 20839.6,
+      "gpu": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "updated_at": "2026-10-19T07:51:48Z"
+    }
+  },
+  "lora": {
+    "base_model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+    "n_figures": 56,
+    "trainable_params": 1594368,
+    "rank": 8,
+    "alpha": 8,
+    "learning_rate": 0.0001,
+    "steps": 1200,
+    "seed": 5,
+    "captions_example": [
+      "osxillus, medical textbook illustration of position of the heart in the thorax, the location of the heart in the thorax",
+      "osxillus, medical textbook illustration of dual system of the human blood circulation, The top panel shows the human heart with the arteries and veins labeled. The bottom panel shows the human circulatory system",
+      "osxillus, medical textbook illustration of pericardial membranes and layers of the heart wall, This image shows a magnified view of the structure of the heart wall"
+    ],
+    "seconds": 1821.7,
+    "peak_vram_gb": 2.05
+  },
+  "image_checks": {
+    "vlm": "qwen2.5vl:3b",
+    "clip": "laion/CLIP-ViT-B-32-laion2B-s34B-b79K"
+  }
+}
