@@ -345,6 +345,42 @@ def images_check():
     run.update_meta(image_checks={"vlm": s.images.vlm, "clip": s.images.clip_model})
 
 
+@img_app.command("check-blind")
+def images_check_blind():
+    """The VLM again, this time not told what the image should show. Resumable."""
+    import re
+
+    import httpx
+
+    from .data import load_chunks
+    from .energy import StageTracker
+    from .images.checks import blind_verdict, vlm_blind
+
+    s = _settings()
+    run = _img_run(s)
+    images = run.read("images.jsonl")
+    done = {r["id"] for r in run.read("image_checks_blind.jsonl")}
+    todo = [r for r in images if r["id"] not in done]
+    if not todo:
+        typer.echo("nothing to do")
+        return
+    # real terms = every word in the book text and the figure titles, alt text and captions
+    corpus = " ".join(c.text for c in load_chunks(s.path("data")))
+    corpus += " ".join(f"{f.title} {f.alt} {f.caption}" for f in _figures(s))
+    vocabulary = set(re.findall(r"[a-z]{3,}", corpus.lower()))
+    _free_gpu(s)
+    client = httpx.Client(base_url=s.ollama_url)
+    with StageTracker(run, "check_images_blind") as tracker:
+        for n, r in enumerate(todo, 1):
+            blind, st = vlm_blind(client, s.images.vlm, run.path / r["file"])
+            v = blind_verdict(blind, r["subject_id"], vocabulary)
+            run.append("image_checks_blind.jsonl", {"id": r["id"], "blind": blind, **v, **st})
+            tracker.tick()
+            typer.echo(
+                f"  [{n}/{len(todo)}] {r['id']} {v['auto']} {v['auto_reasons']} unknown={v['unknown_words'][:5]}"
+            )
+
+
 db_app = typer.Typer(help="Database maintenance")
 app.add_typer(db_app, name="db")
 

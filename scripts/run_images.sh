@@ -14,4 +14,5 @@ step base images;   $MQ images generate --arm base
 step train lora;    $MQ images train
 step lora images;   $MQ images generate --arm lora
 step check images;  $MQ images check
+step blind check;  $MQ images check-blind
 echo "IMAGES DONE $(date '+%H:%M:%S')"
