@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="How MedQuiz Studio generates, checks and measures anatomy MCQs and teaching images on a laptop GPU.">
+<meta name="color-scheme" content="light dark">
+<title>MedQuiz Studio</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a case file. One reading column for prose, wider bands for the two pipelines and the charts.
+   Colour follows the anatomy convention: arterial red and venous blue, used only for data and state. */
+:root {
+  --paper: #f5f7f9;
+  --surface: #ffffff;
+  --ink: #15212c;
+  --muted: #566676;
+  --rule: #d8e0e7;
+  --vein: #2557a7;
+  --artery: #c0392b;
+  --ok: #1d7348;
+  --warn: #9a5a06;
+  --warn-bg: #fbf1e2;
+  --ok-bg: #e5f3eb;
+  --chip: #eaeff4;
+  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f161d; --surface: #152029; --ink: #e5ecf2; --muted: #9aabba; --rule: #26333f;
+    --vein: #4f8de0; --artery: #e2574b; --ok: #4cc38a; --warn: #e3a04a; --warn-bg: #2b2114; --ok-bg: #12291e; --chip: #1c2a36;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f161d; --surface: #152029; --ink: #e5ecf2; --muted: #9aabba; --rule: #26333f;
+  --vein: #4f8de0; --artery: #e2574b; --ok: #4cc38a; --warn: #e3a04a; --warn-bg: #2b2114; --ok-bg: #12291e; --chip: #1c2a36;
+  color-scheme: dark;
+}
+
+body { background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--font-body); }
+.wrap { max-width: 1060px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.55rem, 3.4vw, 2.05rem); }
+h3 { font-size: 1.2rem; font-weight: 500; }
+p { margin: 0; }
+.prose { max-width: 68ch; display: grid; gap: 14px; }
+.eyebrow { font: 500 0.75rem/1 var(--font-body); letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+a { color: var(--vein); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--vein); outline-offset: 2px; border-radius: 3px; }
+section { display: grid; gap: 22px; padding-block: 44px 0; }
+section + section { border-top: 1px solid var(--rule); margin-top: 44px; }
+
+/* header */
+header { display: grid; gap: 18px; }
+.lede { font-size: 1.2rem; line-height: 1.5; max-width: 60ch; }
+.status { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; background: var(--chip); font-size: 0.86rem; font-weight: 500; }
+.chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.chip.ok { background: var(--ok-bg); } .chip.ok::before { background: var(--ok); }
+.chip.warn { background: var(--warn-bg); } .chip.warn::before { background: var(--warn); }
+
+/* facts */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.fact { background: var(--surface); padding: 18px 18px 16px; display: grid; gap: 6px; align-content: start; }
+.fact .n { font: 600 2rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.fact .n small { font: 500 0.95rem var(--font-body); color: var(--muted); margin-left: 4px; }
+.fact p { font-size: 0.92rem; color: var(--muted); }
+
+/* pipelines */
+.pipes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 28px; }
+.pipe { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.pipe h3 { display: flex; align-items: baseline; gap: 10px; }
+.pipe h3 .tag { font: 500 0.78rem var(--font-mono); color: var(--muted); }
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: s; }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--rule); }
+ol.steps li::before { content: counter(s); font: 500 0.82rem/1.9 var(--font-mono); color: var(--muted); }
+ol.steps li > div { display: grid; gap: 4px; min-width: 0; }
+ol.steps b { font-weight: 600; }
+ol.steps .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.84rem; color: var(--muted); }
+ol.steps .meta span { font-family: var(--font-mono); font-size: 0.8rem; }
+ol.steps li.pending b { color: var(--warn); }
+ol.steps li.exp b::after { content: "experiment"; margin-left: 8px; font: 500 0.7rem var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--rule); padding: 1px 6px; border-radius: 4px; }
+.runs { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; display: grid; gap: 10px; }
+.runs pre { margin: 0; overflow-x: auto; font: 400 0.84rem/1.6 var(--font-mono); }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; min-width: 620px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 0.76rem var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hard { color: var(--artery); font-weight: 600; } .soft { color: var(--muted); }
+
+/* charts */
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 24px; }
+.chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.chart h3 { font-size: 1.05rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.84rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(110px, 34%) 1fr; gap: 10px; align-items: center; font-size: 0.86rem; }
+.bar-row .lab { color: var(--ink); }
+.track { display: grid; gap: 3px; }
+.bar { height: 14px; border-radius: 0 4px 4px 0; position: relative; min-width: 2px; }
+.bar.v { background: var(--vein); } .bar.a { background: var(--artery); }
+.bar span { position: absolute; left: calc(100% + 6px); top: -2px; font: 500 0.78rem var(--font-mono); color: var(--muted); white-space: nowrap; }
+.axis { display: grid; grid-template-columns: minmax(110px, 34%) 1fr; gap: 10px; font: 0.72rem var(--font-mono); color: var(--muted); }
+.axis div { display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 4px; padding-right: 34px; }
+.note { font-size: 0.86rem; color: var(--muted); }
+
+/* findings */
+.findings { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 22px 30px; }
+.findings > div { display: grid; gap: 8px; align-content: start; }
+.findings ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 0.95rem; }
+
+/* images */
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; }
+figure { margin: 0; display: grid; gap: 8px; }
+figure img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rule); background: #fff; display: block; }
+figcaption { font-size: 0.86rem; color: var(--muted); }
+.sheet { overflow-x: auto; border-radius: 8px; border: 1px solid var(--rule); background: #fff; }
+.sheet img { max-width: none; width: 1400px; display: block; }
+
+/* status lists */
+.state { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 24px; }
+.state ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.state li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 0.95rem; }
+.state li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; margin-top: 7px; }
+.done li::before { background: var(--ok); }
+.todo li::before { background: var(--warn); }
+.cmd { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px 8px 14px; }
+.cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; }
+.cmd button { font: 500 0.8rem var(--font-body); background: var(--chip); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+.cmd button:hover { border-color: var(--muted); }
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 0.86rem; color: var(--muted); display: grid; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) { .bar { transition: width 0.4s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Project overview &middot; anatomy and physiology</span>
+    <h1>MedQuiz Studio</h1>
+    <p class="lede">A pipeline that writes exam-style questions and teaching images from an open anatomy textbook, checks every item automatically, and measures how far those checks can be trusted. Everything runs on one laptop GPU.</p>
+    <div class="status">
+      <span class="chip ok">Public repo on GitHub</span>
+      <span class="chip ok">CI passing</span>
+      <span class="chip ok">All automatic runs complete</span>
+      <span class="chip warn">Human review not started</span>
+      <span class="chip warn">Release v0.1.0 waits on review</span>
+    </div>
+    <p><a href="https://github.com/Sarthak261-rgb/medquiz-studio">github.com/Sarthak261-rgb/medquiz-studio</a></p>
+  </header>
+
+  <section id="why">
+    <span class="eyebrow">What we are trying to do</span>
+    <h2>Generated medical content is only useful if you know how often it is wrong</h2>
+    <div class="prose">
+      <p>Recollia builds exam questions, clinical cases and teaching images for medical students, generated with AI and checked by doctors. A wrong answer key or a mislabeled artery teaches the wrong medicine, so the hard part is knowing which generated items are safe to show a student.</p>
+      <p>This project builds that loop at small scale. It generates multiple-choice questions from two chapters of <i>Anatomy and Physiology 2e</i> (the heart and the respiratory system), cites each one to the exact paragraph it came from, and runs it through 21 automatic checks. It does the same for teaching images, with Stable Diffusion and a LoRA trained on the book's own drawings.</p>
+      <p>Then it measures the checks themselves: against a blind human review, against defects planted on purpose, against the textbook authors' own questions, and against a second judge model. The numbers that come out of that are the real result.</p>
+    </div>
+  </section>
+
+  <section id="glance">
+    <span class="eyebrow">At a glance</span>
+    <h2>What the runs produced</h2>
+    <div class="facts">
+      <div class="fact"><span class="n">151</span><p>questions, one per passage, with 0 schema failures and 0 retries</p></div>
+      <div class="fact"><span class="n">278<small>/ 278</small></span><p>cited paragraph ids that resolve on openstax.org</p></div>
+      <div class="fact"><span class="n">84.8%</span><p>auto-rejected by the gate; 14.6% once the judge's plausibility check is dropped</p></div>
+      <div class="fact"><span class="n">52%</span><p>of judge verdicts flipped when only the option order was reversed</p></div>
+      <div class="fact"><span class="n">96</span><p>teaching images, 48 from base SD 1.5 and 48 with the OpenStax LoRA, all stamped synthetic</p></div>
+      <div class="fact"><span class="n">0%<small>vs 31 to 44%</small></span><p>images the vision model rejects when told the subject, against when it is not told</p></div>
+    </div>
+    <p class="note">Every number on this page comes from <code>reports/metrics.json</code> in the repo, which CI rebuilds from the committed data on every push.</p>
+  </section>
+
+  <section id="process">
+    <span class="eyebrow">How the process runs</span>
+    <h2>Two pipelines, every step resumable</h2>
+    <div class="prose">
+      <p>Each step reads files from the step before and appends its results to JSONL files under <code>runs/</code>. If a run stops halfway, running it again skips what is already done. The SQLite database behind the review screen and the API is only an index, rebuilt from those files. Times and GPU energy are measured, not estimated: energy comes from the NVIDIA driver's own counter.</p>
+    </div>
+    <div class="pipes">
+      <div class="pipe">
+        <h3>Questions <span class="tag">scripts/run_all.sh</span></h3>
+        <ol class="steps">
+          <li><div><b>Ingest</b><p>Fetch the book's CNXML source from GitHub at a pinned commit, clean it, and pack paragraphs into 151 passages of 71 to 319 words. Also extract the authors' 57 review questions.</p><div class="meta"><span>httpx</span><span>ElementTree</span><span>seconds</span></div></div></li>
+          <li><div><b>Generate</b><p>One question per passage, forced into a JSON schema with stem, four options, key, explanation, evidence quote and Bloom level. Recall and reasoning alternate; options are shuffled with a seed.</p><div class="meta"><span>qwen2.5 7B</span><span>Ollama</span><span>18 min</span><span>17.6 Wh</span></div></div></li>
+          <li><div><b>Rules and retrieval</b><p>Deterministic checks for item-writing flaws, cues and evidence quotes, plus embedding search for citations, duplicates and copies of the book's own questions.</p><div class="meta"><span>rapidfuzz</span><span>bge-small</span><span>FAISS</span><span>under 1 min</span></div></div></li>
+          <li><div><b>NLI</b><p>Does the passage entail the answer statement, and does it entail any distractor swapped into it?</p><div class="meta"><span>DeBERTa-v3 NLI</span><span>PyTorch CUDA</span><span>1 min</span></div></div></li>
+          <li><div><b>LLM judge</b><p>A different model family answers each question blind, audits every option against the passage, and tries it with no passage and with the options alone.</p><div class="meta"><span>llama3.1 8B</span><span>35 min</span><span>34.7 Wh</span></div></div></li>
+          <li class="exp"><div><b>Self-judge</b><p>The same audit with the generator as judge, to look for self-preference.</p><div class="meta"><span>qwen2.5 7B</span><span>20 min</span></div></div></li>
+          <li><div><b>Control set</b><p>The textbook's 57 questions go through the same checks, to see how often the checks reject questions written by people.</p><div class="meta"><span>57 questions</span></div></div></li>
+          <li><div><b>Stress test</b><p>The 23 questions that passed every check are broken on purpose in six known ways, giving 138 mutants, and re-checked.</p><div class="meta"><span>138 mutants</span></div></div></li>
+          <li class="pending"><div><b>Human review</b><p>A blind review screen: the reviewer sees the question and the highlighted source, never the automatic verdict.</p><div class="meta"><span>Streamlit</span><span>0 of 151 done</span></div></div></li>
+          <li><div><b>Report and release</b><p>Recompute every number into <code>reports/</code>. A release writes the accepted questions once, with a sha256 for every file.</p><div class="meta"><span>CI checks both</span></div></div></li>
+        </ol>
+      </div>
+      <div class="pipe">
+        <h3>Images <span class="tag">scripts/run_images.sh</span></h3>
+        <ol class="steps">
+          <li><div><b>Figures</b><p>108 figures from chapters 19, 20 and 22. 12 are credited to third parties and 1 file is broken, so they are left out, along with 39 charts, tables, graphs and photos. 56 anatomical drawings remain.</p><div class="meta"><span>Pillow</span><span>padded to 512 px</span></div></div></li>
+          <li><div><b>Base images</b><p>12 subjects, from the heart's chambers to alveoli, times 4 seeds. Every image gets a visible "SYNTHETIC EDUCATIONAL IMAGE" banner and matching EXIF metadata.</p><div class="meta"><span>SD 1.5 fp16</span><span>diffusers</span><span>7.4 s per image</span></div></div></li>
+          <li><div><b>Train LoRA</b><p>Rank 8 on the UNet's attention layers, 1.6 million trainable parameters, 1,200 steps. No horizontal flips, because a mirrored heart is wrong anatomy.</p><div class="meta"><span>PEFT</span><span>31 min</span><span>8 Wh</span><span>2.05 GB VRAM</span></div></div></li>
+          <li><div><b>LoRA images</b><p>The same prompts and the same seeds as the base images, so any difference comes from the LoRA.</p><div class="meta"><span>10.6 s per image</span></div></div></li>
+          <li><div><b>Image checks</b><p>A CLIP score, then a vision model asked twice: once told what the image should show, once blind. The blind answer is tested against the target organ and the book's vocabulary.</p><div class="meta"><span>LAION CLIP</span><span>qwen2.5-VL 3B</span></div></div></li>
+          <li class="pending"><div><b>Image review</b><p>Base and LoRA images mixed in a fixed random order, never labelled by arm, with a note field for what a doctor would correct.</p><div class="meta"><span>0 of 96 done</span></div></div></li>
+        </ol>
+      </div>
+    </div>
+    <div class="runs">
+      <span class="eyebrow">Where the results live</span>
+      <pre>runs/gen-v1/       151 questions, every check result, run.json with model digests and energy
+runs/book-v1/      the textbook's 57 questions through the same checks
+runs/stress-v1/    138 planted-defect questions
+runs/images-v1/    96 images, LoRA weights, image checks, training log
+data/reviews/      every human decision, one append-only file per reviewer
+reports/           results.md, metrics.json, figures (rebuilt by CI)</pre>
+    </div>
+  </section>
+
+  <section id="checks">
+    <span class="eyebrow">The checks</span>
+    <h2>21 checks on every question</h2>
+    <div class="prose"><p>A question auto-passes only if every <span class="hard">hard</span> check passes. <span class="soft">Soft</span> checks are recorded and scored against human review, but never block. The split was fixed before any review, so the gate cannot be tuned to the answers.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Kind</th><th>Checks</th><th>What they catch</th><th>Failed on</th></tr></thead>
+        <tbody>
+          <tr><td>Rules</td><td><span class="hard">options distinct, all/none of the above, stem leak, evidence in source</span>; <span class="soft">text reference, negative stem, absolute terms, length cue, statement consistent, numeric grounding, key terms in source</span></td><td>Item-writing flaws from NBME-style guidance, cues that give the answer away, invented evidence</td><td class="num">text reference 25.8%</td></tr>
+          <tr><td>Retrieval</td><td><span class="hard">duplicate</span>; <span class="soft">citation retrieval, book overlap</span></td><td>Near copies, questions that drift from their passage, copying the book's own questions</td><td class="num">citation 8.6%</td></tr>
+          <tr><td>NLI</td><td><span class="soft">answer entailed, distractors not entailed</span></td><td>An answer the passage does not support, or a distractor it also supports</td><td class="num">38.4% / 37.1%</td></tr>
+          <tr><td>LLM judge</td><td><span class="hard">blind solve, answer grounded, single correct, distractor quality</span>; <span class="soft">stem clear</span></td><td>Wrong keys, two defensible answers, throwaway distractors</td><td class="num">distractor quality 78.8%</td></tr>
+          <tr><td>Diagnostics</td><td>closed book, options only, recall or reasoning</td><td>Questions answerable without the passage, options that leak the answer</td><td class="num">75.5% / 53.6% solved</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="measure">
+    <span class="eyebrow">Measuring the checks</span>
+    <h2>Four ways to find out if a check can be trusted</h2>
+    <div class="charts">
+      <div class="chart">
+        <h3>Planted defects caught by the automatic gate</h3>
+        <p class="note">23 questions that passed every check, each broken in one known way.</p>
+        <div class="bars" role="list">
+          <div class="bar-row" role="listitem" title="Key moved to a distractor: 23 of 23 rejected"><span class="lab">Key moved to a distractor</span><div class="track"><div class="bar v" style="width:calc(100% - 44px)"><span>100%</span></div></div></div>
+          <div class="bar-row" role="listitem" title="Passage from the other chapter: 23 of 23 rejected"><span class="lab">Passage from the other chapter</span><div class="track"><div class="bar v" style="width:calc(100% - 44px)"><span>100%</span></div></div></div>
+          <div class="bar-row" role="listitem" title="On-topic passage without the fact: 23 of 23 rejected"><span class="lab">On-topic passage, fact missing</span><div class="track"><div class="bar v" style="width:calc(100% - 44px)"><span>100%</span></div></div></div>
+          <div class="bar-row" role="listitem" title="Off-topic distractors: 23 of 23 rejected"><span class="lab">Off-topic distractors</span><div class="track"><div class="bar v" style="width:calc(100% - 44px)"><span>100%</span></div></div></div>
+          <div class="bar-row" role="listitem" title="Paraphrase of the key added as a distractor: 15 of 23 rejected"><span class="lab">Paraphrased second answer</span><div class="track"><div class="bar v" style="width:calc((100% - 44px) * 0.652)"><span>65%</span></div></div></div>
+        </div>
+        <div class="axis"><span></span><div><span>0%</span><span>50%</span><span>100%</span></div></div>
+        <p class="note">The gate catches the defects, but not always for the right reason. Shown an unrelated passage, the judge still called the key supported 30% of the time; NLI caught 96% of those.</p>
+      </div>
+      <div class="chart">
+        <h3>Independent judge against the generator judging itself</h3>
+        <div class="legend"><span><i style="background:var(--vein)"></i>llama3.1 8B (independent)</span><span><i style="background:var(--artery)"></i>qwen2.5 7B (generator)</span></div>
+        <div class="bars" role="list">
+          <div class="bar-row" role="listitem" title="Blind solve: 90.7% vs 91.4% pass"><span class="lab">Blind solve</span><div class="track"><div class="bar v" style="width:calc((100% - 44px) * 0.907)"><span>91%</span></div><div class="bar a" style="width:calc((100% - 44px) * 0.914)"><span>91%</span></div></div></div>
+          <div class="bar-row" role="listitem" title="Answer grounded: 97.4% vs 92.0% pass"><span class="lab">Answer grounded</span><div class="track"><div class="bar v" style="width:calc((100% - 44px) * 0.974)"><span>97%</span></div><div class="bar a" style="width:calc((100% - 44px) * 0.920)"><span>92%</span></div></div></div>
+          <div class="bar-row" role="listitem" title="Single correct: 91.4% vs 88.1% pass"><span class="lab">Single correct</span><div class="track"><div class="bar v" style="width:calc((100% - 44px) * 0.914)"><span>91%</span></div><div class="bar a" style="width:calc((100% - 44px) * 0.881)"><span>88%</span></div></div></div>
+          <div class="bar-row" role="listitem" title="Distractor quality: 21.2% vs 13.2% pass"><span class="lab">Distractor quality</span><div class="track"><div class="bar v" style="width:calc((100% - 44px) * 0.212)"><span>21%</span></div><div class="bar a" style="width:calc((100% - 44px) * 0.132)"><span>13%</span></div></div></div>
+        </div>
+        <div class="axis"><span></span><div><span>0%</span><span>50%</span><span>100%</span></div></div>
+        <p class="note">Share of questions each judge passes. No self-preference: the generator was slightly harsher. But the two agree on the overall verdict at kappa 0.09, barely above chance.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>What it shows</th><th>Result so far</th></tr></thead>
+        <tbody>
+          <tr><td>Blind human review</td><td>Precision, recall and kappa for the gate and for each check</td><td>Waiting on the review</td></tr>
+          <tr><td>Planted defects</td><td>Whether a check notices a defect whose answer is known</td><td>100% on four defect types, 65% on a paraphrased second answer</td></tr>
+          <tr><td>Textbook control set</td><td>A floor on false alarms: questions written by the book's authors</td><td>89.5% rejected, so the gate is far too strict</td></tr>
+          <tr><td>Second judge</td><td>Self-preference, and whether two judges agree at all</td><td>No self-preference; kappa 0.09 between judges</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="findings">
+    <span class="eyebrow">What the measurements found</span>
+    <h2>Where it breaks</h2>
+    <div class="findings">
+      <div>
+        <h3>The judge</h3>
+        <ul>
+          <li>It calls 82% of distractors "low plausibility" when the passage does not mention them, against 53% when the passage contradicts them. It is mostly saying "not in the passage", and that one check drives the 84.8% rejection rate.</li>
+          <li>Reversing the option order flipped 12 of 23 verdicts, all through the plausibility labels.</li>
+          <li>With an on-topic passage that lacks the fact, it still called the key supported 61% of the time. It answers from memory.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>The generator</h3>
+        <ul>
+          <li>"According to the passage" appears in 25.8% of stems, even though the prompt forbids it.</li>
+          <li>41 of 76 questions asked to be recall were labelled reasoning by the judge.</li>
+          <li>From the four options alone, the judge picked the key 53.6% of the time against 25% chance. The options leak the answer.</li>
+          <li>Before the shuffle, the key sat in A or B 69% of the time and in D only 12%.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>The images</h3>
+        <ul>
+          <li>Told what an image should show, the vision model agreed for 100% of images, including ones with no recognisable chambers, and called labels like "PROUAIY I PHH" readable.</li>
+          <li>Asked blind, it rejected 43.8% of base images and 31.2% of LoRA images.</li>
+          <li>The LoRA learned the textbook style, labels included: 72.9% of LoRA images carry label-like text, against 41.7% for base, and the labels checked by eye were not real words.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Fixed along the way</h3>
+        <ul>
+          <li>A duplicate-option rule that flagged 13 good contrasting options ("increased" and "decreased").</li>
+          <li>An evidence threshold calibrated from data: real quotes scored 80 or more, unrelated passages never passed 55.</li>
+          <li>NLI's word-overlap bias, a sentence splitter bug, a JSON answer that never ended, and 20% of each model running on the CPU.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="images">
+    <span class="eyebrow">Image track</span>
+    <h2>Same prompt, same seed, with and without the LoRA</h2>
+    <div class="pair">
+      <figure><img src="img/base-heart-chambers.jpg" alt="Base Stable Diffusion image meant to show a frontal section of the heart. It shows organ-like textures with no recognisable chambers or valves." loading="lazy"><figcaption>Base SD 1.5, "a frontal section of the human heart showing the four chambers and the valves". Organ-like texture, no chambers, no valves.</figcaption></figure>
+      <figure><img src="img/lora-heart-chambers.jpg" alt="LoRA image with the same prompt. It looks like a textbook drawing, but shows two separate heart halves, hand-like vessels and fake labels." loading="lazy"><figcaption>With the OpenStax LoRA. It looks like a textbook drawing, but the heart is split in two, the great vessels are hand-like stumps, there are no valves, and the labels are not words.</figcaption></figure>
+    </div>
+    <div class="sheet"><img src="img/contact_sheet.jpg" alt="All 12 subjects, base images in the top row and LoRA images in the bottom row, same seed." loading="lazy"></div>
+    <p class="note">All 12 subjects at seed 11: base in the top row, LoRA below. Scroll sideways on a phone.</p>
+  </section>
+
+  <section id="stack">
+    <span class="eyebrow">What it uses</span>
+    <h2>Models, tools and data</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Part</th><th>What</th><th>Why this one</th></tr></thead>
+        <tbody>
+          <tr><td>Source</td><td>OpenStax <i>Anatomy and Physiology 2e</i>, CNXML at a pinned commit</td><td>Openly licensed (CC BY-NC-SA 4.0), versioned, with paragraph ids a citation can link to</td></tr>
+          <tr><td>Generator</td><td>qwen2.5 7B instruct, 4-bit, through Ollama</td><td>Fits a 6 GB GPU fully; JSON schema output</td></tr>
+          <tr><td>Judge</td><td>llama3.1 8B instruct, 4-bit</td><td>A different model family from the generator</td></tr>
+          <tr><td>NLI</td><td>DeBERTa-v3 base cross-encoder</td><td>A non-LLM second opinion on grounding</td></tr>
+          <tr><td>Retrieval</td><td>bge-small embeddings and FAISS</td><td>Citations, duplicates, the retrieval eval</td></tr>
+          <tr><td>Images</td><td>Stable Diffusion 1.5 (fp16) with a LoRA trained through PEFT and diffusers</td><td>Trains and runs in about 2 GB of VRAM</td></tr>
+          <tr><td>Image checks</td><td>LAION CLIP ViT-B/32 and qwen2.5-VL 3B</td><td>Cheap alignment score and a vision model that fits next to SD</td></tr>
+          <tr><td>Storage</td><td>Append-only JSONL, with SQLite through SQLAlchemy as an index</td><td>Every result and decision is diffable and auditable in git</td></tr>
+          <tr><td>Apps</td><td>FastAPI for the API, Streamlit for the review screen</td><td>Review and serving without a GPU</td></tr>
+          <tr><td>Measurement</td><td>NVML energy counter, Wilson intervals, Cohen's kappa</td><td>Cost and agreement are measured, not guessed</td></tr>
+          <tr><td>Engineering</td><td>Python 3.11, uv, pytest (48 tests), ruff, Docker, GitHub Actions</td><td>CI rebuilds the report and fails if one byte changes</td></tr>
+          <tr><td>Hardware</td><td>RTX 4050 Laptop GPU, 6 GB VRAM, 16 GB RAM</td><td>Everything above ran on it</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="state">
+    <span class="eyebrow">Where it stands</span>
+    <h2>Done, and what is left</h2>
+    <div class="state">
+      <div class="done">
+        <h3>Done</h3>
+        <ul>
+          <li>151 questions generated and run through every check stage, with no judge errors</li>
+          <li>Control set, stress test and self-judge experiment complete</li>
+          <li>96 images, LoRA trained, both vision-model checks complete</li>
+          <li>Report, figures and README, checked against the data</li>
+          <li>Public repo, CI green, fresh clone reproduces the report</li>
+        </ul>
+      </div>
+      <div class="todo">
+        <h3>Left to do</h3>
+        <ul>
+          <li>Blind human review of the 151 questions and the 96 images</li>
+          <li>Rebuild the report with the human numbers and agreement scores</li>
+          <li>Cut release v0.1.0 of the accepted questions, with hashes</li>
+          <li>Next round: a doctor as reviewer, clinical vignettes, images without generated text</li>
+        </ul>
+      </div>
+    </div>
+    <div class="prose"><p>To start the review on the laptop:</p></div>
+    <div class="cmd"><code id="cmd-review">uv run medquiz review</code><button type="button" data-copy="cmd-review">Copy</button></div>
+    <div class="cmd"><code id="cmd-report">uv run medquiz report &amp;&amp; uv run medquiz release 0.1.0</code><button type="button" data-copy="cmd-report">Copy</button></div>
+  </section>
+
+  <footer>
+    <p>Source text and figures: Betts, J. G., et al., <i>Anatomy and Physiology 2e</i>, OpenStax, CC BY-NC-SA 4.0. Code MIT.</p>
+    <p>Nothing here has been reviewed by a clinician. The questions and images are not for teaching or assessment without that review.</p>
+  </footer>
+</div>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var el = document.getElementById(btn.getAttribute("data-copy"));
+    var text = el.textContent;
+    function selectIt() {
+      var r = document.createRange(); r.selectNodeContents(el);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = "Selected";
+    }
+    try {
+      navigator.clipboard.writeText(text).then(function () { btn.textContent = "Copied"; }, selectIt);
+    } catch (e) { selectIt(); }
+    setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+  });
+});
+</script>
+</body>
+</html>

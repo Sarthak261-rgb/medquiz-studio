@@ -8,6 +8,8 @@ The questions and images are not really the point. The point is measuring how of
 
 Everything ran on one RTX 4050 Laptop GPU (6 GB): a 7B generator, an 8B judge, an NLI model, Stable Diffusion 1.5 and a LoRA fine-tune.
 
+A one-page overview of the project, with both pipelines and the main findings: **https://sarthak261-rgb.github.io/medquiz-studio/**
+
 ## Results at a glance
 
 All numbers come from [`reports/results.md`](reports/results.md), which `medquiz report` rebuilds from the files in this repo. CI fails if a rerun changes it by a single byte.
