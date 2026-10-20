@@ -8,7 +8,7 @@ The questions and images are not really the point. The point is measuring how of
 
 Everything ran on one RTX 4050 Laptop GPU (6 GB): a 7B generator, an 8B judge, an NLI model, Stable Diffusion 1.5 and a LoRA fine-tune.
 
-A one-page overview of the project, with both pipelines and the main findings: **https://sarthak261-rgb.github.io/medquiz-studio/**
+A one-page overview of the project, with both pipelines and the main findings: https://sarthak261-rgb.github.io/medquiz-studio/
 
 ## Results at a glance
 
